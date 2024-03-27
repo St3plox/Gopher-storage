@@ -16,7 +16,7 @@ func main() {
 		fmt.Fprint(w, "got path\n")
 	})
 
-	err := http.ListenAndServe("localhost:8080", mux)
+	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
 		panic(err) 
 	}

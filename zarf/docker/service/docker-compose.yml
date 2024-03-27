@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  storage-api:
+    image: localhost/tveu/storage/storage-api:0.0.1
+    ports:
+      - "8080:8080"
+    networks:
+      - storage-network
+
+networks:
+  storage-network:
+    driver: bridge
