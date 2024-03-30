@@ -1,6 +1,10 @@
 package storage
 
-import "time"
+import (
+	"encoding/json"
+	"io/ioutil"
+	"time"
+)
 
 type Document struct {
 	Key       string
@@ -18,6 +22,19 @@ func NewDocument(key string, val any) *Document {
 	}
 }
 
-func save()  {
-	
+func readDocumentFromFile(filePath string) (*Document, error) {
+	// Read file contents
+	data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	// Unmarshal JSON data into a Document struct
+	var doc Document
+	err = json.Unmarshal(data, &doc)
+	if err != nil {
+		return nil, err
+	}
+
+	return &doc, nil
 }

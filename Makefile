@@ -18,7 +18,7 @@ tidy:
 	go mod vendor
 	
 service-run-local:
-	go run app/services/main-storage/main.go
+	sudo go run app/services/main-storage/main.go
 
 dev-test-curl:
 	curl localhost:$(EXPOSE_PORT)/storage/1

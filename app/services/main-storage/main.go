@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/St3plox/Gopher-storage/foundation/storage"
+	"log"
 	"net/http"
 )
 
 //Must be remove in future
 var s *storage.Storage
 
-func init()  {
+func init() {
 	s = storage.NewStorage()
 }
 
@@ -23,11 +24,41 @@ type SaveData struct {
 func main() {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /storage/{id}", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "got path\n")
+	mux.HandleFunc("GET /storage/{key}", func(w http.ResponseWriter, r *http.Request) {
+
+		key := r.PathValue("key")
+		if key == "" {
+			http.Error(w, "key cannot be empty", http.StatusBadRequest)
+			return
+		}
+		log.Default().Printf("--- Got key %s --- ", key)
+
+		val, exists, err := s.Get(key)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if !exists {
+			http.Error(w, "Key not found", http.StatusNotFound)
+			return
+		}
+
+		response := struct {
+			Key   string      `json:"key"`
+			Value interface{} `json:"value"`
+		}{
+			Key:   key,
+			Value: val,
+		}
+
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+
 	})
 
-	mux.HandleFunc("PUT /storage", func(w http.ResponseWriter, r *http.Request) {
+	//TODO: fix put errors
+	mux.HandleFunc("POST /storage", func(w http.ResponseWriter, r *http.Request) {
 
 		var sd SaveData
 		err := json.NewDecoder(r.Body).Decode(&sd)
@@ -36,13 +67,18 @@ func main() {
 			return
 		}
 
+		log.Default().Println("-------------------- Successfuly decoded response body --------------------")
+
 		fmt.Fprintf(w, "Save data: %+v", sd)
 
 		err = s.Put(sd.Key, sd.Val)
-		//TODO: Fix the error 
+
 		if err != nil {
-			panic(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
+
+		log.Default().Println("-------------------- Successfuly saved data --------------------")
 	})
 
 	err := http.ListenAndServe(":8080", mux)

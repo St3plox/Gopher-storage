@@ -7,6 +7,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
+)
+
+const (
+	DefaultPartitionFormat = "partition_%d"
 )
 
 type Storage struct {
@@ -15,34 +21,57 @@ type Storage struct {
 }
 
 func NewStorage() *Storage {
+	// Read default path from environment variable, fallback to default value if not set
+	defaultPath := os.Getenv("GOPHER_STORAGE_PATH")
+	if defaultPath == "" {
+		defaultPath = "/var/lib/gopher-storage"
+	}
+
+	// Read partition number from environment variable, fallback to default value if not set or invalid
+	partitionNumberStr := os.Getenv("GOPHER_PARTITION_NUMBER")
+	partitionNumber, err := strconv.Atoi(partitionNumberStr)
+	if err != nil || partitionNumber <= 0 {
+		partitionNumber = 10 // Default partition number
+	}
+
 	return &Storage{
-		DefaultPath:     "/var/lib/gopher-storage",
-		PartitionNumber: 10,
+		DefaultPath:     defaultPath,
+		PartitionNumber: partitionNumber,
 	}
 }
 
-func (s *Storage) Put(key string, value any) error {
-	
+//Put function is for saving value under key string
+//By default saves under path/gopher-storage/partition_n/key_hash/number.json
+func (s *Storage) Put(key string, value interface{}) error {
+	// Compute hash and partition
 	keyHash, partition, err := s.hash(key)
 	if err != nil {
 		return err
 	}
-	
-	doc := NewDocument(key, value)
-	jsonDoc, err := json.Marshal(doc)
-	if err != nil {
-		return err
-	}
-	
-	// Construct file path
-	partitionDir := filepath.Join(s.DefaultPath, fmt.Sprintf("partition_%d", partition))
-	filePath := filepath.Join(partitionDir, fmt.Sprintf("%d.json", keyHash))
+
+	// Construct directory path
+	partitionDir := s.partitionDirGenerate(keyHash, partition)
 
 	// Ensure partition directory exists
 	if _, err := os.Stat(partitionDir); os.IsNotExist(err) {
 		if err := os.MkdirAll(partitionDir, 0755); err != nil {
 			return err
 		}
+	}
+
+	_, fileIndex, _, err := handleCollision(partitionDir, key)
+	if err != nil {
+		return err
+	}
+
+	// Construct file path
+	filePath := filepath.Join(partitionDir, string(rune(fileIndex)), ".json")
+
+	// Create document
+	doc := NewDocument(key, value)
+	jsonDoc, err := json.Marshal(doc)
+	if err != nil {
+		return err
 	}
 
 	// Write JSON document to file
@@ -60,7 +89,78 @@ func (s *Storage) Put(key string, value any) error {
 	return nil
 }
 
-func (s *Storage) Get(key string) (bool, error) {
-	//TODO: impement me
-	return false, nil
+func (s *Storage) Get(key string) (any, bool, error) {
+
+	keyHash, partition, err := s.hash(key)
+	if err != nil {
+		return nil, false, err
+	}
+
+	partitionDir := s.partitionDirGenerate(keyHash, partition)
+	doc, _, isExist, err := handleCollision(partitionDir, key)
+	if err != nil {
+		return nil, false, err
+	}
+
+	return doc.Value, isExist, nil
+}
+
+//func partitionDirGenerate Generates partition dir.
+//By default saves under path/gopher-storage/partition_n/key_hash/number.json
+func (s *Storage) partitionDirGenerate(keyHash int, patrtition int) string {
+	return filepath.Join(s.DefaultPath, fmt.Sprintf(DefaultPartitionFormat, patrtition), fmt.Sprintf("%d", keyHash))
+}
+
+//Function handleCollision handles collision of the hash value.
+//Returns the *Document if there is such key, number of a file that needs to be saved, and bool isKeyExist
+//Takes as an argument filepath without "n.json" and unhashed key
+func handleCollision(partitionDir string, key string) (*Document, int, bool, error) {
+	// Initialize variables
+	var maxIndex int
+	var keyExists bool
+	var foundDoc *Document
+
+	// Iterate through all files in the partition directory
+	err := filepath.Walk(partitionDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Check if the file is a regular file
+		if info.Mode().IsRegular() {
+			// Parse the index from the file name (excluding the ".json" extension)
+			fileName := strings.TrimSuffix(info.Name(), ".json")
+			fileIndex, err := strconv.Atoi(fileName)
+			if err != nil {
+				return err
+			}
+
+			// Update the maximum index if the current index is greater
+			if fileIndex > maxIndex {
+				maxIndex = fileIndex
+			}
+
+			// Read the document from the file to check if it corresponds to the key
+			doc, err := readDocumentFromFile(path)
+			if err != nil {
+				return err
+			}
+
+			// If the key matches, set keyExists to true and store the document
+			if doc.Key == key {
+				keyExists = true
+				foundDoc = doc
+			}
+		}
+
+		return nil
+	})
+
+	// If an error occurred during the walk, return the error
+	if err != nil {
+		return nil, 0, false, err
+	}
+
+	// Return the document, maximum index, and keyExists
+	return foundDoc, maxIndex, keyExists, nil
 }
