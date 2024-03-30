@@ -32,6 +32,9 @@ docker-compose-up:
 docker-compose-down:
 	docker-compose f $(DOCKER_COMPOSE_FILE) down
 
+service-logs:
+	docker logs service-storage-api-1
+
 docker-compose-logs:
 	docker-compose -f $(DOCKER_COMPOSE_FILE) logs
 

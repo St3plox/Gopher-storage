@@ -53,7 +53,10 @@ func main() {
 
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
+		err = json.NewEncoder(w).Encode(response)
+		if err != nil {
+			return
+		}
 
 	})
 
@@ -72,7 +75,6 @@ func main() {
 		fmt.Fprintf(w, "Save data: %+v", sd)
 
 		err = s.Put(sd.Key, sd.Val)
-
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

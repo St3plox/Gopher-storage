@@ -5,6 +5,7 @@ package storage
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -64,8 +65,12 @@ func (s *Storage) Put(key string, value interface{}) error {
 		return err
 	}
 
+	log.Default().Println(partitionDir)
+	log.Default().Println(fileIndex)
+	fileName :=strconv.Itoa(fileIndex) +  ".json"
+
 	// Construct file path
-	filePath := filepath.Join(partitionDir, string(rune(fileIndex)), ".json")
+	filePath := filepath.Join(partitionDir, fileName)
 
 	// Create document
 	doc := NewDocument(key, value)
@@ -115,9 +120,10 @@ func (s *Storage) partitionDirGenerate(keyHash int, patrtition int) string {
 //Returns the *Document if there is such key, number of a file that needs to be saved, and bool isKeyExist
 //Takes as an argument filepath without "n.json" and unhashed key
 func handleCollision(partitionDir string, key string) (*Document, int, bool, error) {
+
 	// Initialize variables
-	var maxIndex int
-	var keyExists bool
+	maxIndex := 0
+	keyExists := false
 	var foundDoc *Document
 
 	// Iterate through all files in the partition directory
