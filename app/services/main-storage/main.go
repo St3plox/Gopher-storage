@@ -1,25 +1,63 @@
 package main
 
 import (
+	"fmt"
 	"github.com/St3plox/Gopher-storage/foundation/logger"
-	"net/http"
+	"github.com/rs/zerolog"
+	"os"
+	"runtime"
+	"github.com/ardanlabs/conf/v3"
 )
 
-//Must be remove in future
+var build = "develop"
+
+type Config struct {
+	APIHost   string `default:"0.0.0.0:3000"`
+	DebugHost string `default:"0.0.0.0:4000"`
+}
 
 func main() {
+	log := logger.New("STORAGE - SERVICE")
 
-	log := logger.New("Storage - API")
 	if err := run(log); err != nil {
-		log.Error().
-			Str("startup")
+		log.Error().Err(err).Msg("startup")
 		os.Exit(1)
 	}
+}
 
-	mux := http.NewServeMux()
+func run(log *zerolog.Logger) error {
 
-	err := http.ListenAndServe(":8080", mux)
-	if err != nil {
-		panic(err)
+	// -------------------------------------------------------------------------
+	// GOMAXPROCS
+
+	log.Info().Str("startup", "GOMAXPROCS").Int("GOMAXPROCS", runtime.
+		GOMAXPROCS(0)).
+		Str("BUILD", build).
+		Msg("startup")
+
+
+	// -------------------------------------------------------------------------
+	// Configuration
+
+	cfg := struct {
+		conf.Version
+		Web struct {
+			APIHost   string `conf:"default:0.0.0.0:3000"`
+			DebugHost string `conf:"default:0.0.0.0:4000"`
+		}
+		DB struct {
+			StoragePath string `conf:"default:/var/lib/gopher-storage"`
+		}
+	}{
+		Version: conf.Version{
+			Build: build,
+			Desc:  "copyright information here",
+		},
 	}
+
+	// Print out the configuration
+	fmt.Println("API Host:", cfg.Web.APIHost)
+	fmt.Println("Debug Host:", cfg.DB.StoragePath)
+
+	return nil
 }

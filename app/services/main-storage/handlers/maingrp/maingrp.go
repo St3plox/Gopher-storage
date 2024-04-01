@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/St3plox/Gopher-storage/foundation/storage"
+	"github.com/St3plox/Gopher-storage/foundation/web"
 	"net/http"
 )
 
@@ -48,10 +49,9 @@ func Get(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 		Value: val,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(response)
+	err = web.Respond(ctx, w, response, http.StatusCreated)
 	if err != nil {
-		return nil
+		return err
 	}
 	return nil
 }

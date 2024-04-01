@@ -3,6 +3,7 @@ module github.com/St3plox/Gopher-storage
 go 1.22.1
 
 require (
+	github.com/ardanlabs/conf/v3 v3.1.7
 	github.com/google/uuid v1.6.0
 	github.com/rs/zerolog v1.32.0
 )
