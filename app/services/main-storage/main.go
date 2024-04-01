@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/St3plox/Gopher-storage/app/services/main-storage/handlers"
+	"github.com/St3plox/Gopher-storage/business/web/debug"
 	"github.com/St3plox/Gopher-storage/foundation/logger"
 	"github.com/St3plox/Gopher-storage/foundation/storage"
 	"github.com/ardanlabs/conf/v3"
@@ -14,6 +15,8 @@ import (
 	"os"
 	"runtime"
 	"time"
+
+	_ "expvar"
 )
 
 var build = "develop"
@@ -88,6 +91,25 @@ func run(log *zerolog.Logger) error {
 	// Storage
 
 	st := storage.NewStorage(cfg.Storage.StoragePath, cfg.Storage.PartitionNumber)
+
+	// -------------------------------------------------------------------------
+	// Start Debug Service
+
+	log.Info().
+		Str("status", "debug v1 router started").
+		Str("host", cfg.Web.DebugHost).
+		Msg("startup")
+
+	go func() {
+		if err := http.ListenAndServe(cfg.Web.DebugHost, debug.StandardLibraryMux()); err != nil {
+			log.Error().
+				Str("status", "debug v1 router closed").
+				Str("host", cfg.Web.DebugHost).
+				Err(err).
+				Msg("shutdown")
+
+		}
+	}()
 
 	// -------------------------------------------------------------------------
 	// Start API Service

@@ -9,6 +9,10 @@ VERSION			:= 0.0.1
 SERVICE_IMAGE	:= $(BASE_IMAGE_NAME)/$(SERVICE_NAME):$(VERSION)
 DOCKER_COMPOSE_FILE := zarf/docker/service/docker-compose.yml
 
+
+tools:
+	go install github.com/divan/expvarmon@latest
+
 dev-docker:
 	docker pull $(ALPINE)
 	docker pull $(GOLANG)
@@ -37,6 +41,9 @@ service-logs:
 
 docker-compose-logs:
 	docker-compose -f $(DOCKER_COMPOSE_FILE) logs
+
+metrics:
+	expvarmon -ports="localhost:4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
 
 service-run:
 	docker run -d -p $(EXPOSE_PORT):$(INTERNAL_PORT) --name $(CONTAINER_NAME) $(SERVICE_IMAGE)
