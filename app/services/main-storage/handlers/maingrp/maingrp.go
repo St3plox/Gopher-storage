@@ -9,11 +9,14 @@ import (
 	"net/http"
 )
 
-//TODO: remove
-var s *storage.Storage
+type Handler struct {
+	storage *storage.Storage
+}
 
-func init() {
-	s = storage.NewStorage()
+func New(storage *storage.Storage) *Handler {
+	return &Handler{
+		storage: storage,
+	}
 }
 
 // SaveData temporarily here
@@ -22,16 +25,16 @@ type SaveData struct {
 	Val any
 }
 
-func Get(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (h *Handler) Get(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 
 	key := r.PathValue("key")
-	
+
 	if key == "" {
 		http.Error(w, "key cannot be empty", http.StatusBadRequest)
 		return nil
 	}
-	
-	val, exists, err := s.Get(key)
+
+	val, exists, err := h.storage.Get(key)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return nil
@@ -56,7 +59,7 @@ func Get(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func Post(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (h *Handler) Post(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var sd SaveData
 	err := json.NewDecoder(r.Body).Decode(&sd)
 	if err != nil {
@@ -66,10 +69,16 @@ func Post(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 
 	fmt.Fprintf(w, "Save data: %+v", sd)
 
-	err = s.Put(sd.Key, sd.Val)
+	err = h.storage.Put(sd.Key, sd.Val)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return nil
 	}
+
+	err = web.Respond(ctx, w, nil, http.StatusOK)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

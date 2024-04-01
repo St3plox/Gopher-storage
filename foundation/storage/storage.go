@@ -5,11 +5,14 @@ package storage
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+)
+
+const (
+	DefaultPartitionFormat = "partition_%d"
 )
 
 type Storage struct {
@@ -48,8 +51,6 @@ func (s *Storage) Put(key string, value interface{}) error {
 		return err
 	}
 
-	log.Default().Println(partitionDir)
-	log.Default().Println(fileIndex)
 	fileName := strconv.Itoa(fileIndex) + ".json"
 
 	// Construct file path

@@ -17,9 +17,11 @@ type APIMuxConfig struct {
 
 func APIMux(cfg APIMuxConfig) *web.App {
 	app := web.NewApp(cfg.Shutdown, mid.Logger(cfg.Log))
-	
-	app.Handle("GET /storage/{key}", maingrp.Get)
-	app.Handle("POST /storage", maingrp.Post)
-	
+
+	h := maingrp.New(cfg.Storage)
+
+	app.Handle("GET /storage/{key}", h.Get)
+	app.Handle("POST /storage", h.Post)
+
 	return app
 }

@@ -1,20 +1,22 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"github.com/St3plox/Gopher-storage/app/services/main-storage/handlers"
 	"github.com/St3plox/Gopher-storage/foundation/logger"
+	"github.com/St3plox/Gopher-storage/foundation/storage"
+	"github.com/ardanlabs/conf/v3"
 	"github.com/rs/zerolog"
+	defaultLog "log"
+	"net/http"
 	"os"
 	"runtime"
-	"github.com/ardanlabs/conf/v3"
+	"time"
 )
 
 var build = "develop"
-
-type Config struct {
-	APIHost   string `default:"0.0.0.0:3000"`
-	DebugHost string `default:"0.0.0.0:4000"`
-}
 
 func main() {
 	log := logger.New("STORAGE - SERVICE")
@@ -35,18 +37,22 @@ func run(log *zerolog.Logger) error {
 		Str("BUILD", build).
 		Msg("startup")
 
-
 	// -------------------------------------------------------------------------
 	// Configuration
 
 	cfg := struct {
 		conf.Version
 		Web struct {
-			APIHost   string `conf:"default:0.0.0.0:3000"`
-			DebugHost string `conf:"default:0.0.0.0:4000"`
+			ReadTimeout     time.Duration `conf:"default:5s"`
+			WriteTimeout    time.Duration `conf:"default:10s"`
+			IdleTimeout     time.Duration `conf:"default:120s"`
+			ShutdownTimeout time.Duration `conf:"default:20s,mask"`
+			APIHost         string        `conf:"default::3000"`
+			DebugHost       string        `conf:"default::4000"`
 		}
-		DB struct {
-			StoragePath string `conf:"default:/var/lib/gopher-storage"`
+		Storage struct {
+			StoragePath     string `conf:"default:/var/lib/gopher-st"`
+			PartitionNumber int    `conf:"default:10"`
 		}
 	}{
 		Version: conf.Version{
@@ -55,9 +61,89 @@ func run(log *zerolog.Logger) error {
 		},
 	}
 
-	// Print out the configuration
-	fmt.Println("API Host:", cfg.Web.APIHost)
-	fmt.Println("Debug Host:", cfg.DB.StoragePath)
+	const prefix = "STORAGE"
+	help, err := conf.Parse(prefix, &cfg)
+
+	if err != nil {
+		if errors.Is(err, conf.ErrHelpWanted) {
+			fmt.Println(help)
+			return nil
+		}
+		return fmt.Errorf("parsing config: %w", err)
+	}
+
+	// -------------------------------------------------------------------------
+	// App Starting
+
+	log.Info().Str("version", build).Msg("starting service")
+	defer log.Info().Msg("shotdown complete")
+
+	out, err := conf.String(&cfg)
+	if err != nil {
+		return fmt.Errorf("generating config for output: %w", err)
+	}
+	log.Info().Str("config", out).Msg("startup")
+
+	// -------------------------------------------------------------------------
+	// Storage
+
+	st := storage.NewStorage(cfg.Storage.StoragePath, cfg.Storage.PartitionNumber)
+
+	// -------------------------------------------------------------------------
+	// Start API Service
+
+	log.Info().Msg("initializing V1 API support")
+	shutdown := make(chan os.Signal, 1)
+	apiMux := handlers.APIMux(handlers.APIMuxConfig{
+		Shutdown: shutdown,
+		Log:      log,
+		Storage:  st,
+	})
+
+	errorLogger := zerolog.New(os.Stderr).With().Timestamp().Logger()
+	api := http.Server{
+		Addr:         cfg.Web.APIHost,
+		Handler:      apiMux,
+		ReadTimeout:  cfg.Web.ReadTimeout,
+		WriteTimeout: cfg.Web.WriteTimeout,
+		IdleTimeout:  cfg.Web.IdleTimeout,
+		ErrorLog:     defaultLog.New(&errorLogger, "", 0),
+	}
+
+	serverErrors := make(chan error, 1)
+	go func() {
+		log.Info().
+			Str("status", "api router started").
+			Str("host", api.Addr).
+			Msg("startup")
+		serverErrors <- api.ListenAndServe()
+	}()
+
+	// -------------------------------------------------------------------------
+	// Shutdown
+
+	select {
+	case err := <-serverErrors:
+		return fmt.Errorf("server error: %w", err)
+
+	case sig := <-shutdown:
+		log.Info().
+			Str("status", "shutdown started").
+			Str("signal", sig.String()).
+			Msg("shutdown")
+		defer log.Info().Str("status", "shutdown complete").
+			Str("signal", sig.String()).
+			Msg("shutdown")
+
+		ctx, cancel := context.WithTimeout(context.Background(), cfg.Web.ShutdownTimeout)
+		defer cancel()
+
+		if err := api.Shutdown(ctx); err != nil {
+			_ = api.Close()
+			return fmt.Errorf("could not stop server gracefully: %w", err)
+		}
+
+	}
 
 	return nil
 }
