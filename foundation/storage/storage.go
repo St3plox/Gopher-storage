@@ -12,29 +12,12 @@ import (
 	"strings"
 )
 
-const (
-	DefaultPartitionFormat = "partition_%d"
-)
-
 type Storage struct {
 	DefaultPath     string
 	PartitionNumber int
 }
 
-func NewStorage() *Storage {
-	// Read default path from environment variable, fallback to default value if not set
-	defaultPath := os.Getenv("GOPHER_STORAGE_PATH")
-	if defaultPath == "" {
-		defaultPath = "/var/lib/gopher-storage"
-	}
-
-	// Read partition number from environment variable, fallback to default value if not set or invalid
-	partitionNumberStr := os.Getenv("GOPHER_PARTITION_NUMBER")
-	partitionNumber, err := strconv.Atoi(partitionNumberStr)
-	if err != nil || partitionNumber <= 0 {
-		partitionNumber = 10 // Default partition number
-	}
-
+func NewStorage(defaultPath string, partitionNumber int) *Storage {
 	return &Storage{
 		DefaultPath:     defaultPath,
 		PartitionNumber: partitionNumber,
@@ -67,7 +50,7 @@ func (s *Storage) Put(key string, value interface{}) error {
 
 	log.Default().Println(partitionDir)
 	log.Default().Println(fileIndex)
-	fileName :=strconv.Itoa(fileIndex) +  ".json"
+	fileName := strconv.Itoa(fileIndex) + ".json"
 
 	// Construct file path
 	filePath := filepath.Join(partitionDir, fileName)
