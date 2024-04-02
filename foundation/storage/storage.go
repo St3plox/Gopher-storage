@@ -78,6 +78,8 @@ func (s *Storage) Put(key string, value interface{}) error {
 	return nil
 }
 
+
+//TODO: fix the error when there is no key
 func (s *Storage) Get(key string) (any, bool, error) {
 
 	keyHash, partition, err := s.hash(key)

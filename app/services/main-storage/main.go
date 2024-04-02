@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/St3plox/Gopher-storage/app/services/main-storage/handlers"
-	"github.com/St3plox/Gopher-storage/business/web/debug"
+	"github.com/St3plox/Gopher-storage/business/web/v1/debug"
 	"github.com/St3plox/Gopher-storage/foundation/logger"
 	"github.com/St3plox/Gopher-storage/foundation/storage"
 	"github.com/ardanlabs/conf/v3"

@@ -3,9 +3,12 @@ package maingrp
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	v1 "github.com/St3plox/Gopher-storage/business/web/v1"
 	"github.com/St3plox/Gopher-storage/foundation/storage"
 	"github.com/St3plox/Gopher-storage/foundation/web"
+	"log"
 	"net/http"
 )
 
@@ -34,14 +37,14 @@ func (h *Handler) Get(ctx context.Context, w http.ResponseWriter, r *http.Reques
 		return nil
 	}
 
+	//TODO: fix error message not displayed in json
 	val, exists, err := h.storage.Get(key)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return nil
+		log.Default().Println("Entered suct")
+		return v1.NewRequestError(errors.New("Sorage error" + err.Error()), http.StatusInternalServerError)
 	}
 	if !exists {
-		http.Error(w, "Key not found", http.StatusNotFound)
-		return nil
+		return v1.NewRequestError(errors.New("KEY NOT FOUND"), http.StatusNotFound)
 	}
 
 	response := struct {
