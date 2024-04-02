@@ -29,5 +29,7 @@ COPY --from=build /app/main .
 # Expose the port the app runs on
 EXPOSE $EXPOSE_PORT
 
+EXPOSE 4000
+
 # Command to run the executable
 CMD ["./main"]

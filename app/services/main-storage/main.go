@@ -43,6 +43,8 @@ func run(log *zerolog.Logger) error {
 	// -------------------------------------------------------------------------
 	// Configuration
 
+
+	//TODO: Auth Config
 	cfg := struct {
 		conf.Version
 		Web struct {
