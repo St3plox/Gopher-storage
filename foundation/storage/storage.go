@@ -1,5 +1,5 @@
-//Package storage used for handling saving/retreiving data on a single node
-//server
+// Package storage used for handling saving/retreiving data on a single node
+// server
 package storage
 
 import (
@@ -27,8 +27,8 @@ func NewStorage(defaultPath string, partitionNumber int) *Storage {
 	}
 }
 
-//Put function is for saving value under key string
-//By default saves under path/gopher-storage/partition_n/key_hash/number.json
+// Put function is for saving value under key string
+// By default saves under path/gopher-storage/partition_n/key_hash/number.json
 func (s *Storage) Put(key string, value interface{}) error {
 	// Compute hash and partition
 	keyHash, partition, err := s.hash(key)
@@ -78,10 +78,8 @@ func (s *Storage) Put(key string, value interface{}) error {
 	return nil
 }
 
-
-//TODO: fix the error when there is no key
+// TODO: fix the error when there is no key
 func (s *Storage) Get(key string) (any, bool, error) {
-
 	keyHash, partition, err := s.hash(key)
 	if err != nil {
 		return nil, false, err
@@ -93,24 +91,34 @@ func (s *Storage) Get(key string) (any, bool, error) {
 		return nil, false, err
 	}
 
+	// Check if the document exists
+	if doc == nil {
+		return nil, false, nil // Return nil value and false for existence flag
+	}
+
 	return doc.Value, isExist, nil
 }
 
-//func partitionDirGenerate Generates partition dir.
-//By default saves under path/gopher-storage/partition_n/key_hash/number.json
+// func partitionDirGenerate Generates partition dir.
+// By default saves under path/gopher-storage/partition_n/key_hash/number.json
 func (s *Storage) partitionDirGenerate(keyHash int, patrtition int) string {
 	return filepath.Join(s.DefaultPath, fmt.Sprintf(DefaultPartitionFormat, patrtition), fmt.Sprintf("%d", keyHash))
 }
 
-//Function handleCollision handles collision of the hash value.
-//Returns the *Document if there is such key, number of a file that needs to be saved, and bool isKeyExist
-//Takes as an argument filepath without "n.json" and unhashed key
+// Function handleCollision handles collision of the hash value.
+// Returns the *Document if there is such key, number of a file that needs to be saved, and bool isKeyExist
+// Takes as an argument filepath without "n.json" and unhashed key
 func handleCollision(partitionDir string, key string) (*Document, int, bool, error) {
-
 	// Initialize variables
 	maxIndex := 0
 	keyExists := false
 	var foundDoc *Document
+
+	// Check if the partition directory exists
+	if _, err := os.Stat(partitionDir); os.IsNotExist(err) {
+		// If the directory doesn't exist, return indicating the key doesn't exist
+		return nil, 0, false, nil
+	}
 
 	// Iterate through all files in the partition directory
 	err := filepath.Walk(partitionDir, func(path string, info os.FileInfo, err error) error {
