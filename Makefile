@@ -11,6 +11,9 @@ DOCKER_COMPOSE_FILE := zarf/docker/service/docker-compose.yml
 NAME 		:= service_storage-api_1
 
 
+
+
+
 tools:
 	go install github.com/divan/expvarmon@latest
 
@@ -21,9 +24,14 @@ dev-docker:
 tidy:
 	go mod tidy
 	go mod vendor
-	
+
 service-run-local:
 	sudo go run app/services/main-storage/main.go
+
+run-foundation-tests:
+	sudo go test ./foundation/storage -v
+
+run-tests: run-foundation-tests
 
 dev-test-curl:
 	curl localhost:$(EXPOSE_PORT)/storage/1
