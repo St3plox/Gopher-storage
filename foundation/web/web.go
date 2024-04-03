@@ -3,6 +3,8 @@ package web
 import (
 	"context"
 	"errors"
+	v1 "github.com/St3plox/Gopher-storage/business/web/v1"
+	"log"
 	"net/http"
 	"os"
 	"syscall"
@@ -33,6 +35,7 @@ func (a *App) SignalShutdown() {
 
 // Handle sets a handler function for a given HTTP method and path pair
 // to the application server mux.
+
 func (a *App) Handle(path string, handler Handler, mw ...Middleware) {
 	handler = wrapMiddleware(mw, handler)
 	handler = wrapMiddleware(a.mw, handler)
@@ -41,29 +44,38 @@ func (a *App) Handle(path string, handler Handler, mw ...Middleware) {
 		var v = Values{
 			TraceID: uuid.NewString(),
 			Now:     time.Now().UTC(),
-		}
-		ctx = context.WithValue(ctx, key, &v)
-
-		if err := handler(ctx, w, r); err != nil {
-			if validateShutdown(err) {
-				a.SignalShutdown()
-				return nil // Return nil here to indicate graceful shutdown without error
 			}
-			return err
-		}
-		return nil // Return nil here to indicate successful handling without error
+			ctx = context.WithValue(ctx, key, &v)
+
+			if err := handler(ctx, w, r); err != nil {
+				if validateShutdown(err) {
+					a.SignalShutdown()
+					return nil // Return nil here to indicate graceful shutdown without error
+				}
+				return err
+			}
+			return nil // Return nil here to indicate successful handling without error
 	}
 
-	//TODO: Fix the error4
 	// Wrap 'h' in http.HandlerFunc to match the ServeMux.Handler method signature
 	a.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
-		if err := h(r.Context(), w, r); err != nil {
-			// Handle error if needed
+		log.Default().Println("Entered HandleFunc")
+		err := h(r.Context(), w, r)
+		if err != nil {
+			log.Default().Println("Entered != nil section HandleFunc")
+			// Check if it's a not found error
+			var reqErr *v1.RequestError
+			if errors.As(err, &reqErr) {
+				log.Default().Println("Entered as HandleFunc")
+				http.Error(w, reqErr.Err.Error(), reqErr.Status)
+				return
+			}
+			// Handle other errors
+			log.Default().Println("Entered unknown error section HandleFunc")
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		}
 	})
 }
-
 func validateShutdown(err error) bool {
 
 	// Ignore syscall.EPIPE and syscall.ECONNRESET errors which occurs
