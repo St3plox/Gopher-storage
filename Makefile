@@ -36,7 +36,7 @@ run-tests: run-foundation-tests
 dev-test-curl:
 	curl localhost:$(EXPOSE_PORT)/storage/1
 
-build-service-image:
+service-build-image:
 	docker build -t $(SERVICE_IMAGE) -f zarf/docker/service/Dockerfile .
 
 docker-compose-up:
