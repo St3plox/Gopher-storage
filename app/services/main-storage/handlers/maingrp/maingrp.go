@@ -8,7 +8,6 @@ import (
 	v1 "github.com/St3plox/Gopher-storage/business/web/v1"
 	"github.com/St3plox/Gopher-storage/foundation/storage"
 	"github.com/St3plox/Gopher-storage/foundation/web"
-	"log"
 	"net/http"
 )
 
@@ -40,11 +39,9 @@ func (h *Handler) Get(ctx context.Context, w http.ResponseWriter, r *http.Reques
 	//TODO: fix error message not displayed in json
 	val, exists, err := h.storage.Get(key)
 	if err != nil {
-		log.Default().Print("Entered Storage error")
 		return v1.NewRequestError(errors.New("Sorage error"+err.Error()), http.StatusInternalServerError)
 	}
 	if !exists {
-		log.Default().Print("Entered !exists section")
 		return v1.NewRequestError(errors.New("KEY NOT FOUND"), http.StatusNotFound)
 	}
 
