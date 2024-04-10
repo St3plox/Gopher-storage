@@ -12,12 +12,12 @@ import (
 )
 
 type Handler struct {
-	storage *storage.Storage
+	storer storage.Storer
 }
 
-func New(storage *storage.Storage) *Handler {
+func New(storer storage.Storer) *Handler {
 	return &Handler{
-		storage: storage,
+		storer: storer,
 	}
 }
 
@@ -37,7 +37,7 @@ func (h *Handler) Get(ctx context.Context, w http.ResponseWriter, r *http.Reques
 	}
 
 	//TODO: fix error message not displayed in json
-	val, exists, err := h.storage.Get(key)
+	val, exists, err := h.storer.Get(key)
 	if err != nil {
 		return v1.NewRequestError(errors.New("Sorage error"+err.Error()), http.StatusInternalServerError)
 	}
@@ -70,7 +70,7 @@ func (h *Handler) Post(ctx context.Context, w http.ResponseWriter, r *http.Reque
 
 	fmt.Fprintf(w, "Save data: %+v", sd)
 
-	err = h.storage.Put(sd.Key, sd.Val)
+	err = h.storer.Put(sd.Key, sd.Val)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return nil

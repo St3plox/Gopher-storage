@@ -121,7 +121,7 @@ func run(log *zerolog.Logger) error {
 	apiMux := handlers.APIMux(handlers.APIMuxConfig{
 		Shutdown: shutdown,
 		Log:      log,
-		Storage:  st,
+		Storer:  st,
 	})
 
 	errorLogger := zerolog.New(os.Stderr).With().Timestamp().Logger()

@@ -15,6 +15,11 @@ const (
 	DefaultPartitionFormat = "partition_%d"
 )
 
+type Storer interface {
+	Put(key string, value interface{}) error
+	Get(key string) (any, bool, error)
+}
+
 type Storage struct {
 	DefaultPath     string
 	PartitionNumber int
