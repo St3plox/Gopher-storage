@@ -81,7 +81,7 @@ func run(log *zerolog.Logger) error {
 	// App Starting
 
 	log.Info().Str("version", build).Msg("starting service")
-	defer log.Info().Msg("shotdown complete")
+	defer log.Info().Msg("shutdown complete")
 
 	out, err := conf.String(&cfg)
 	if err != nil {
