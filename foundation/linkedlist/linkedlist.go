@@ -1,4 +1,4 @@
-// Package linkedlist is used for implementation  circular doubly linked list mainly for storing nodes in hash space 
+// Package linkedlist is used for implementation  circular doubly linked list mainly for storing nodes in hash space
 package linkedlist
 
 type ListNode struct {
@@ -13,7 +13,7 @@ type LinkedList struct {
 }
 
 func New() *LinkedList {
-	return &LinkedList{ListNode{}}
+	return &LinkedList{}
 }
 
 func (list *LinkedList) Insert(hashedId int, val any) {
@@ -62,5 +62,9 @@ func (list *LinkedList) FindClosestNode(hashedID int) *ListNode {
 		closest = current
 	}
 
-	return closest
+	if closest.HasheId == hashedID {
+		return closest
+	}
+
+	return closest.Next
 }
