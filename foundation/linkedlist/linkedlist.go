@@ -1,24 +1,24 @@
 // Package linkedlist is used for implementation  circular doubly linked list mainly for storing nodes in hash space
 package linkedlist
 
-type ListNode struct {
+type ListNode[T any] struct {
 	HasheId int
-	Val     any
-	Next    *ListNode
-	Prev    *ListNode
+	Val     T
+	Next    *ListNode[T]
+	Prev    *ListNode[T]
 }
 
-type LinkedList struct {
-	Head *ListNode
+type LinkedList[T any] struct {
+	Head *ListNode[T]
+	size uint
 }
 
-func New() *LinkedList {
-	return &LinkedList{}
+func New[T any]() *LinkedList[T] {
+	return &LinkedList[T]{}
 }
 
-func (list *LinkedList) Insert(hashedId int, val any) {
-
-	node := &ListNode{
+func (list *LinkedList[T]) Insert(hashedId int, val T) {
+	node := &ListNode[T]{
 		HasheId: hashedId,
 		Val:     val,
 	}
@@ -27,6 +27,7 @@ func (list *LinkedList) Insert(hashedId int, val any) {
 		list.Head = node
 		node.Next = node
 		node.Prev = node
+		list.size++
 		return
 	}
 
@@ -39,10 +40,10 @@ func (list *LinkedList) Insert(hashedId int, val any) {
 	node.Prev = current
 	current.Next.Prev = node
 	current.Next = node
+	list.size++
 }
 
-func (list *LinkedList) FindClosestNode(hashedID int) *ListNode {
-
+func (list *LinkedList[T]) FindClosestNode(hashedID int) *ListNode[T] {
 	if list.Head == nil {
 		return nil
 	}
@@ -57,7 +58,6 @@ func (list *LinkedList) FindClosestNode(hashedID int) *ListNode {
 		current = current.Next
 	}
 
-	// Check the last node
 	if current.HasheId <= hashedID {
 		closest = current
 	}
@@ -67,4 +67,43 @@ func (list *LinkedList) FindClosestNode(hashedID int) *ListNode {
 	}
 
 	return closest.Next
+}
+
+func (list *LinkedList[T]) RemovedNode(hashedID int) {
+	if list.Head == nil {
+		return
+	}
+	current := list.Head
+
+	for current.Next != list.Head {
+		if current.HasheId == hashedID {
+			prev := current.Prev
+			next := current.Next
+
+			prev.Next = next
+			next.Prev = prev
+
+			list.size--
+			return
+		}
+		current = current.Next
+	}
+}
+
+func (list *LinkedList[T]) Values() []T {
+	if list.Head == nil {
+		return nil
+	}
+
+	values := make([]T, 0, list.size)
+	current := list.Head
+	for {
+		values = append(values, current.Val)
+		current = current.Next
+		if current == list.Head {
+			break
+		}
+	}
+
+	return values
 }

@@ -7,7 +7,7 @@ import (
 )
 
 func TestLinkedList_Insert(t *testing.T) {
-	list := New()
+	list := New[string]()
 
 	// Insert elements into the list
 	list.Insert(1, "A")
@@ -20,7 +20,7 @@ func TestLinkedList_Insert(t *testing.T) {
 }
 
 func TestLinkedList_FindClosestNode(t *testing.T) {
-	list := New()
+	list := New[string]()
 
 	list.Insert(1, "1")
 	list.Insert(3, "3")
@@ -33,7 +33,7 @@ func TestLinkedList_FindClosestNode(t *testing.T) {
 	}
 	tests := []struct {
 		name     string
-		list     *LinkedList
+		list     *LinkedList[string]
 		args     args
 		expected int
 	}{
@@ -55,3 +55,19 @@ func TestLinkedList_FindClosestNode(t *testing.T) {
 		})
 	}
 }
+
+func TestLinkedList_RemovedNode(t *testing.T) {
+	list := New[string]()
+
+	// Insert elements into the list
+	list.Insert(1, "A")
+	list.Insert(2, "B")
+	list.Insert(3, "C")
+
+	list.RemovedNode(2)
+
+	if list.Head.HasheId != 1 && list.Head.Next.HasheId != 3 {
+		t.Errorf("Deletion of Node with id %d failed", list.Head.Next.HasheId)
+	}
+}
+
