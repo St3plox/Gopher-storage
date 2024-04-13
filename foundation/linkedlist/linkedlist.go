@@ -2,15 +2,15 @@
 package linkedlist
 
 type ListNode[T any] struct {
-	HasheId int
-	Val     T
-	Next    *ListNode[T]
-	Prev    *ListNode[T]
+	hashedID int
+	Val      T
+	Next     *ListNode[T]
+	Prev     *ListNode[T]
 }
 
 type LinkedList[T any] struct {
 	Head *ListNode[T]
-	size uint
+	size int
 }
 
 func New[T any]() *LinkedList[T] {
@@ -19,8 +19,8 @@ func New[T any]() *LinkedList[T] {
 
 func (list *LinkedList[T]) Insert(hashedId int, val T) {
 	node := &ListNode[T]{
-		HasheId: hashedId,
-		Val:     val,
+		hashedID: hashedId,
+		Val:      val,
 	}
 
 	if list.Head == nil {
@@ -32,7 +32,7 @@ func (list *LinkedList[T]) Insert(hashedId int, val T) {
 	}
 
 	current := list.Head
-	for current.Next != list.Head && current.Next.HasheId < node.HasheId {
+	for current.Next != list.Head && current.Next.hashedID < node.hashedID {
 		current = current.Next
 	}
 
@@ -52,17 +52,17 @@ func (list *LinkedList[T]) FindClosestNode(hashedID int) *ListNode[T] {
 	closest := current
 
 	for current.Next != list.Head {
-		if current.HasheId <= hashedID {
+		if current.hashedID <= hashedID {
 			closest = current
 		}
 		current = current.Next
 	}
 
-	if current.HasheId <= hashedID {
+	if current.hashedID <= hashedID {
 		closest = current
 	}
 
-	if closest.HasheId == hashedID {
+	if closest.hashedID == hashedID {
 		return closest
 	}
 
@@ -76,7 +76,7 @@ func (list *LinkedList[T]) RemovedNode(hashedID int) {
 	current := list.Head
 
 	for current.Next != list.Head {
-		if current.HasheId == hashedID {
+		if current.hashedID == hashedID {
 			prev := current.Prev
 			next := current.Next
 
@@ -106,4 +106,12 @@ func (list *LinkedList[T]) Values() []T {
 	}
 
 	return values
+}
+
+func (ln ListNode[T]) HashedID() int {
+	return ln.hashedID
+}
+
+func (list *LinkedList[T]) Size() int {
+	return list.size
 }

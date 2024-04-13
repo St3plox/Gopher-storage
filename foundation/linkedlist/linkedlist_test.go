@@ -14,8 +14,8 @@ func TestLinkedList_Insert(t *testing.T) {
 	list.Insert(3, "C")
 	list.Insert(2, "B")
 
-	if list.Head.Next.HasheId != 2 {
-		t.Errorf("Expected Head node HasheId to be 2, got %d", list.Head.Next.HasheId)
+	if list.Head.Next.hashedID != 2 {
+		t.Errorf("Expected Head node hashedID to be 2, got %d", list.Head.Next.hashedID)
 	}
 }
 
@@ -49,8 +49,8 @@ func TestLinkedList_FindClosestNode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.list.FindClosestNode(tt.args.hashedId)
-			if got.HasheId != tt.expected {
-				t.Errorf("Expected Head node HasheId to be %d, got %d", tt.expected, got.HasheId)
+			if got.hashedID != tt.expected {
+				t.Errorf("Expected Head node hashedID to be %d, got %d", tt.expected, got.hashedID)
 			}
 		})
 	}
@@ -66,8 +66,8 @@ func TestLinkedList_RemovedNode(t *testing.T) {
 
 	list.RemovedNode(2)
 
-	if list.Head.HasheId != 1 && list.Head.Next.HasheId != 3 {
-		t.Errorf("Deletion of Node with id %d failed", list.Head.Next.HasheId)
+	if list.Head.hashedID != 1 && list.Head.Next.hashedID != 3 {
+		t.Errorf("Deletion of Node with id %d failed", list.Head.Next.hashedID)
 	}
 }
 
