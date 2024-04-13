@@ -1,11 +1,11 @@
 // Package balancer is used for balancing request in hash space
-package balancer
+package balance
 
 import "github.com/rs/zerolog"
 
 type Balancer interface {
-	Get(key string)
-	Put(key string, value any)
+	Get(key string)(any, error)
+	Put(key string, value any) error
 }
 
 type Core struct {

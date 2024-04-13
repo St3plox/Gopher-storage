@@ -21,3 +21,4 @@ func Hash(key string, partitionNumber int) (hash int, partition int, err error) 
 
 	return hash, partition, nil
 }
+//TODO: ADD Hash(key string)int, error
