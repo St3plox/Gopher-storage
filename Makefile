@@ -10,16 +10,34 @@ SERVICE_IMAGE		:= $(BASE_IMAGE_NAME)/$(SERVICE_NAME):$(VERSION)
 DOCKER_COMPOSE_FILE := zarf/docker/service/docker-compose.yml
 NAME 		:= service_storage-api_1
 
+PROTO_SRC_DIR := ./app/services/node-api
+PROTOC := protoc
+PROTOC_INCLUDE := -I$(PROTO_SRC_DIR)
+GO_OUT_DIR := ./business/proto
 
 
 
 
 tools:
 	go install github.com/divan/expvarmon@latest
+	go get -u google.golang.org/protobuf/cmd/protoc-gen-go
+	go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
+
 
 dev-docker:
 	docker pull $(ALPINE)
 	docker pull $(GOLANG)
+
+# Generate Go code from proto files
+generate-proto: generate-node-api
+
+generate-node-api:
+	$(PROTOC) $(PROTOC_INCLUDE) \
+	--go_out=$(GO_OUT_DIR) \
+	--go-grpc_out=$(GO_OUT_DIR) \
+	$(PROTO_SRC_DIR)/node.proto
+
+
 
 tidy:
 	go mod tidy

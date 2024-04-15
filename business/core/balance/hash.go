@@ -23,12 +23,15 @@ func (hs *HashSpace) Get(key string) (any, error) {
 	}
 
 	listNode := hs.nodes.FindClosestNode(keyHash)
+	n := listNode.Val
 
-	val, err := node.Get(listNode.HashedID(), key)
+	val, err := (*n).Get(key)
 	if err != nil {
 		return nil, err
 	}
 	
+	//TODO: Add failure handling
+
 	return val, nil
 }
 
@@ -40,9 +43,14 @@ func (hs *HashSpace) Put(key string, value any) error {
 	}
 
 	listNode := hs.nodes.FindClosestNode(keyHash)
+	n := listNode.Val
+	err = (*n).Put(key, value)
+	if err != nil {
+		return err
+	}
+	//TODO: add failure handling
 	//TODO: add avaiability check
 	
-	//TODO: implement me
 	return nil
 }
 

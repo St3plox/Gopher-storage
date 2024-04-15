@@ -3,7 +3,7 @@ package linkedlist
 
 type ListNode[T any] struct {
 	hashedID int
-	Val      T
+	Val      *T
 	Next     *ListNode[T]
 	Prev     *ListNode[T]
 }
@@ -20,7 +20,7 @@ func New[T any]() *LinkedList[T] {
 func (list *LinkedList[T]) Insert(hashedId int, val T) {
 	node := &ListNode[T]{
 		hashedID: hashedId,
-		Val:      val,
+		Val:      &val,
 	}
 
 	if list.Head == nil {
