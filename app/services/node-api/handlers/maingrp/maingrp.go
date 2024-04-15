@@ -36,7 +36,6 @@ func (h *Handler) Get(ctx context.Context, w http.ResponseWriter, r *http.Reques
 		return nil
 	}
 
-	//TODO: fix error message not displayed in json
 	val, exists, err := h.storer.Get(key)
 	if err != nil {
 		return v1.NewRequestError(errors.New("Sorage error"+err.Error()), http.StatusInternalServerError)

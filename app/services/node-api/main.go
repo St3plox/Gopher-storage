@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/St3plox/Gopher-storage/app/services/main-storage/handlers"
+	"github.com/St3plox/Gopher-storage/app/services/node-api/handlers"
 	"github.com/St3plox/Gopher-storage/business/web/v1/debug"
 	"github.com/St3plox/Gopher-storage/foundation/logger"
 	"github.com/St3plox/Gopher-storage/foundation/storage"
@@ -22,7 +22,7 @@ import (
 var build = "develop"
 
 func main() {
-	log := logger.New("STORAGE - SERVICE")
+	log := logger.New("NODE - SERVICE")
 
 	if err := run(log); err != nil {
 		log.Error().Err(err).Msg("startup")
@@ -42,7 +42,6 @@ func run(log *zerolog.Logger) error {
 
 	// -------------------------------------------------------------------------
 	// Configuration
-
 
 	//TODO: Auth Config
 	cfg := struct {
@@ -66,7 +65,7 @@ func run(log *zerolog.Logger) error {
 		},
 	}
 
-	const prefix = "STORAGE"
+	const prefix = "NODE"
 	help, err := conf.Parse(prefix, &cfg)
 
 	if err != nil {
@@ -121,7 +120,7 @@ func run(log *zerolog.Logger) error {
 	apiMux := handlers.APIMux(handlers.APIMuxConfig{
 		Shutdown: shutdown,
 		Log:      log,
-		Storer:  st,
+		Storer:   st,
 	})
 
 	errorLogger := zerolog.New(os.Stderr).With().Timestamp().Logger()

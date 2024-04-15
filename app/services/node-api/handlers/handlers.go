@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"github.com/St3plox/Gopher-storage/app/services/main-storage/handlers/maingrp"
+	"github.com/St3plox/Gopher-storage/app/services/node-api/handlers/maingrp"
 	"github.com/St3plox/Gopher-storage/business/web/v1/mid"
 	"github.com/St3plox/Gopher-storage/foundation/storage"
 	"github.com/St3plox/Gopher-storage/foundation/web"
