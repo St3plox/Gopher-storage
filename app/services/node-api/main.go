@@ -11,8 +11,10 @@ import (
 	"github.com/ardanlabs/conf/v3"
 	"github.com/rs/zerolog"
 	defaultLog "log"
+	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"runtime"
 	"time"
 
@@ -117,13 +119,30 @@ func run(log *zerolog.Logger) error {
 
 	log.Info().Msg("initializing V1 API support")
 	shutdown := make(chan os.Signal, 1)
-	apiMux := handlers.APIMux(handlers.APIMuxConfig{
+	signal.Notify(shutdown, os.Interrupt)
+
+	server := handlers.GRPCServer(handlers.GRPCServerConfig{
 		Shutdown: shutdown,
 		Log:      log,
 		Storer:   st,
 	})
 
-	errorLogger := zerolog.New(os.Stderr).With().Timestamp().Logger()
+	listener, err := net.Listen("tcp", ":"+cfg.Web.APIHost) // Update with your desired port
+	if err != nil {
+		panic(err)
+	}
+	defer listener.Close()
+
+	serverErrors := make(chan error, 1)
+	go func() {
+		log.Info().
+			Str("status", "gRPC server started").
+			Msg("startup")
+
+		serverErrors <- server.Serve(listener)
+	}()
+
+/*	errorLogger := zerolog.New(os.Stderr).With().Timestamp().Logger()
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
 		Handler:      apiMux,
@@ -140,7 +159,7 @@ func run(log *zerolog.Logger) error {
 			Str("host", api.Addr).
 			Msg("startup")
 		serverErrors <- api.ListenAndServe()
-	}()
+	}()*/
 
 	// -------------------------------------------------------------------------
 	// Shutdown
@@ -154,6 +173,7 @@ func run(log *zerolog.Logger) error {
 			Str("status", "shutdown started").
 			Str("signal", sig.String()).
 			Msg("shutdown")
+		server.GracefulStop()
 		defer log.Info().Str("status", "shutdown complete").
 			Str("signal", sig.String()).
 			Msg("shutdown")

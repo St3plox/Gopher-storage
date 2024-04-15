@@ -1,14 +1,14 @@
 GOLANG          	:= golang:1.22
 ALPINE 				:= alpine:3.19
 BASE_IMAGE_NAME 	:= localhost/tveu/storage
-SERVICE_NAME    	:= storage-api
+SERVICE_NAME    	:= node-api
 CONTAINER_NAME  	:= storage-container
 EXPOSE_PORT			:= 3000
 INTERNAL_PORT		:= 3000
 VERSION				:= 0.0.1
 SERVICE_IMAGE		:= $(BASE_IMAGE_NAME)/$(SERVICE_NAME):$(VERSION)
 DOCKER_COMPOSE_FILE := zarf/docker/service/docker-compose.yml
-NAME 		:= service_storage-api_1
+NAME 		:= service_node-api_1
 
 PROTO_SRC_DIR := ./app/services/node-api
 PROTOC := protoc
@@ -44,7 +44,7 @@ tidy:
 	go mod vendor
 
 service-run-local:
-	sudo go run app/services/main-storage/main.go
+	sudo go run app/services/node-api/main.go
 
 run-foundation-tests:
 	sudo go test ./foundation/storage -v
@@ -76,5 +76,5 @@ service-run:
 	docker run -d -p $(EXPOSE_PORT):$(INTERNAL_PORT) --name $(CONTAINER_NAME) $(SERVICE_IMAGE)
 
 service-stop:
-	docker stop $(NAME)
-	docker rm $(NAME)
+	docker stop service_storage-api_1
+	docker rm service_storage-api_1

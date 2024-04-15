@@ -2,16 +2,14 @@ package maingrp
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
-	"fmt"
-	v1 "github.com/St3plox/Gopher-storage/business/web/v1"
+	node_api "github.com/St3plox/Gopher-storage/business/proto/github.com/St3plox/Gopher-storage/app/services/node-api"
 	"github.com/St3plox/Gopher-storage/foundation/storage"
-	"github.com/St3plox/Gopher-storage/foundation/web"
-	"net/http"
+	anypb "github.com/golang/protobuf/ptypes/any"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type Handler struct {
+	node_api.NodeV1Server
 	storer storage.Storer
 }
 
@@ -21,6 +19,35 @@ func New(storer storage.Storer) *Handler {
 	}
 }
 
+func (h *Handler) Create(ctx context.Context, req *node_api.CreateRequest) (*emptypb.Empty, error) {
+
+	err := h.storer.Put(req.Key, req.Val)
+	if err != nil {
+		return nil, err
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
+func (h *Handler) Get(ctx context.Context, req *node_api.GetRequest) (*node_api.GetResponse, error) {
+
+	val, _, err := h.storer.Get(req.Key)
+	if err != nil {
+		return nil, err
+	}
+
+	valPtr := &anypb.Any{}
+	if val != nil {
+		valPtr = val.(*anypb.Any)
+	}
+
+	//TODO: add bool value to the response
+	resp := &node_api.GetResponse{Val: valPtr}
+
+	return resp, nil
+}
+
+/*
 // SaveData temporarily here
 type SaveData struct {
 	Key string
@@ -81,4 +108,4 @@ func (h *Handler) Post(ctx context.Context, w http.ResponseWriter, r *http.Reque
 	}
 
 	return nil
-}
+}*/
