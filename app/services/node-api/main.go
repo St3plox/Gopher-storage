@@ -66,7 +66,7 @@ func run(log *zerolog.Logger) error {
 		},
 	}
 
-	const prefix = "STORAGE"
+	const prefix = "NODE"
 	help, err := conf.Parse(prefix, &cfg)
 
 	if err != nil {

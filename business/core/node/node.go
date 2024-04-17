@@ -1,22 +1,20 @@
 package node
 
 import (
-	"context"
-	nodeapi "github.com/St3plox/Gopher-storage/business/proto/github.com/St3plox/Gopher-storage/app/services/node-api"
+	"bytes"
+	"encoding/json"
 	"github.com/St3plox/Gopher-storage/foundation/storage"
-	anypb "github.com/golang/protobuf/ptypes/any"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	"time"
+	"net/http"
 )
 
 const stringIdLength = 10
 
 type Node struct {
-	hashId     int
-	Adress     string
-	Port       string
-	isAvaiable bool
+	hashId      int
+	Adress      string
+	Port        string
+	IsAvailable bool
+	IsVirtual   bool
 }
 
 func New(adress string, port string) (*Node, error) {
@@ -28,10 +26,11 @@ func New(adress string, port string) (*Node, error) {
 	}
 
 	return &Node{
-		hashId:     hashId,
-		Adress:     adress,
-		Port:       port,
-		isAvaiable: false,
+		hashId:      hashId,
+		Adress:      adress,
+		Port:        port,
+		IsAvailable: false,
+		IsVirtual:   false,
 	}, nil
 }
 
@@ -41,7 +40,8 @@ func GenVirtual(node Node) (*Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	virtualNode.isAvaiable = node.isAvaiable
+	virtualNode.IsAvailable = node.IsAvailable
+	virtualNode.IsVirtual = true
 
 	return virtualNode, nil
 }
@@ -57,52 +57,40 @@ func (n *Node) CheckConnection() bool {
 	return false
 }
 
-// Get function sends gRPC Get request to this node address
-func (n *Node) Get(key string) (any, error) {
+// Get function sends Get request to this node address, returns value, response code, error
+func (n *Node) Get(key string) (any, int, error) {
 
-	conn, err := grpc.Dial(n.Adress+":"+n.Port, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	addr := n.Adress + ":" + n.Port + "/storage" + key
+
+	resp, err := http.Get(addr)
 	if err != nil {
-		return nil, err
+		return nil, resp.StatusCode, err
 	}
-	defer conn.Close()
+	defer resp.Body.Close()
 
-	c := nodeapi.NewNodeV1Client(conn)
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	resp, err := c.Get(ctx, &nodeapi.GetRequest{Key: key})
-	if err != nil {
-		return nil, err
+	var respBody any
+	if err = json.NewDecoder(resp.Body).Decode(&respBody); err != nil {
+		return nil, http.StatusInternalServerError, err
 	}
 
-	return resp.Val, nil
+	return respBody, resp.StatusCode, nil
 }
 
-// Put function runs gRPC Create request to this node
-func (n *Node) Put(key string, val any) error {
+// Put function runs  Post request to this node, returns status code and error
+func (n *Node) Put(key string, val any) (int, error) {
 
-	valPtr := &anypb.Any{}
-	if val != nil {
-		valPtr = val.(*anypb.Any)
-	}
-
-	conn, err := grpc.Dial(n.Adress+":"+n.Port, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	jsonVal, err := json.Marshal(val)
 	if err != nil {
-		return err
+		return http.StatusInternalServerError, err
 	}
-	defer conn.Close()
 
-	c := nodeapi.NewNodeV1Client(conn)
+	addr := n.Adress + ":" + n.Port + "/storage"
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	resp, err := c.Create(ctx, &nodeapi.CreateRequest{Key: key, Val: valPtr})
+	resp, err := http.Post(addr, "aplication/json", bytes.NewBuffer(jsonVal))
 	if err != nil {
-		return err
+		return http.StatusInternalServerError, err
 	}
-	_ = resp
+	defer resp.Body.Close()
 
-	return nil
+	return resp.StatusCode, nil
 }
