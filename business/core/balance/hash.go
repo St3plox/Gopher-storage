@@ -26,7 +26,7 @@ func (hs *HashSpace) Get(key string) (any, error) {
 	listNode := hs.nodes.FindClosestNode(keyHash)
 	n := listNode.Val
 
-	val, err := (*n).Get(key)
+	val, _, err := (*n).Get(key)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func (hs *HashSpace) Put(key string, value any) error {
 		go func(node *node.Node) {
 			defer wg.Done()
 
-			if err := node.Put(key, value); err != nil {
+			if _, err := node.Put(key, value); err != nil {
 				m.Lock()
 				putErr = err
 				m.Unlock()
@@ -66,7 +66,7 @@ func (hs *HashSpace) Put(key string, value any) error {
 
 	//TODO: add failure handling
 	//TODO: add avaiability check
-	
+
 	return putErr
 }
 
