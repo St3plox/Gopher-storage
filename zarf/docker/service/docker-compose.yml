@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   storage-api:
-    image: localhost/tveu/storage/storage-api:0.0.1
+    image: localhost/tveu/storage/node-api:0.0.1
     ports:
       - "3000:3000"
     networks:

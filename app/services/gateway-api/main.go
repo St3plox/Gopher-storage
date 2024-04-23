@@ -47,7 +47,7 @@ func run(log *zerolog.Logger) error {
 			WriteTimeout    time.Duration `conf:"default:10s"`
 			IdleTimeout     time.Duration `conf:"default:120s"`
 			ShutdownTimeout time.Duration `conf:"default:20s,mask"`
-			APIHost         string        `conf:"default::8080"`
+			APIHost         string        `conf:"default::8081"`
 			DebugHost       string        `conf:"default::4001"`
 		}
 	}{

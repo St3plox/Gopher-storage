@@ -34,7 +34,7 @@ func New(adress string, port string) (*Node, error) {
 	}, nil
 }
 
-func GenVirtual(node Node) (*Node, error) {
+func GenVirtual(node *Node) (*Node, error) {
 
 	virtualNode, err := New(node.Adress, node.Port)
 	if err != nil {
