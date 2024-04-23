@@ -4,8 +4,8 @@ import (
 	"hash/fnv"
 )
 
-//func hash returns hash value and partition of a string key
-func (s *Storage) hash(key string) (hash int, partition int, err error) {
+// Hash  returns hash value and partition of a string key
+func Hash(key string, partitionNumber int) (hash int, partition int, err error) {
 	// Create a new FNV-1a hash
 	h := fnv.New32a()
 
@@ -17,7 +17,8 @@ func (s *Storage) hash(key string) (hash int, partition int, err error) {
 
 	// Get the hash value as a uint32
 	hash = int(h.Sum32())
-	partition = hash % s.PartitionNumber
+	partition = hash % partitionNumber
 
 	return hash, partition, nil
 }
+//TODO: ADD Hash(key string)int, error

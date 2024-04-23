@@ -11,7 +11,7 @@ COPY go.mod .
 COPY . .
 
 # Build the Go app
-RUN CGO_ENABLED=0 GOOS=linux go build -o main ./app/services/main-storage
+RUN CGO_ENABLED=0 GOOS=linux go build -o main ./app/services/node-api
 
 # Start a new stage from Alpine
 FROM alpine:3.19

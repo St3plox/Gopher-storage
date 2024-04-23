@@ -36,7 +36,7 @@ func NewStorage(defaultPath string, partitionNumber int) *Storage {
 // By default saves under path/gopher-storage/partition_n/key_hash/number.json
 func (s *Storage) Put(key string, value interface{}) error {
 	// Compute hash and partition
-	keyHash, partition, err := s.hash(key)
+	keyHash, partition, err := Hash(key, s.PartitionNumber)
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func (s *Storage) Put(key string, value interface{}) error {
 }
 
 func (s *Storage) Get(key string) (any, bool, error) {
-	keyHash, partition, err := s.hash(key)
+	keyHash, partition, err := Hash(key, s.PartitionNumber)
 	if err != nil {
 		return nil, false, err
 	}

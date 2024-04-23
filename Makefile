@@ -1,12 +1,14 @@
 GOLANG          	:= golang:1.22
 ALPINE 				:= alpine:3.19
 BASE_IMAGE_NAME 	:= localhost/tveu/storage
-SERVICE_NAME    	:= storage-api
-CONTAINER_NAME  	:= storage-container
+SERVICE_NAME    	:= node-api
+GATEWAY_NAME    	:= gateway-api
+CONTAINER_NAME  	:= node
 EXPOSE_PORT			:= 3000
 INTERNAL_PORT		:= 3000
 VERSION				:= 0.0.1
 SERVICE_IMAGE		:= $(BASE_IMAGE_NAME)/$(SERVICE_NAME):$(VERSION)
+GATEWAY_IMAGE		:= $(BASE_IMAGE_NAME)/$(SERVICE_NAME):$(VERSION)
 DOCKER_COMPOSE_FILE := zarf/docker/service/docker-compose.yml
 NAME 		:= service_storage-api_1
 
@@ -58,5 +60,16 @@ service-run:
 	docker run -d -p $(EXPOSE_PORT):$(INTERNAL_PORT) --name $(CONTAINER_NAME) $(SERVICE_IMAGE)
 
 service-stop:
-	docker stop $(NAME)
-	docker rm $(NAME)
+	docker stop $(CONTAINER_NAME)
+	docker rm $(CONTAINER_NAME)
+
+gateway-build-image:
+	docker build -t $(SERVICE_IMAGE) -f zarf/docker/gateway/Dockerfile .
+
+gateway-run:
+	docker run -d -p 8081:8081 --name $(GATEWAY_NAME) $(GATEWAY_IMAGE)
+
+gateway-stop:
+	docker stop $(GATEWAY_NAME)
+	docker rm $(GATEWAY_NAME)
+
