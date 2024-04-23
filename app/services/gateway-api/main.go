@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/St3plox/Gopher-storage/app/services/gateway-api/handlers"
 	"github.com/St3plox/Gopher-storage/business/web/v1/debug"
 	"github.com/St3plox/Gopher-storage/foundation/logger"
 	"github.com/ardanlabs/conf/v3"
@@ -16,6 +17,10 @@ import (
 	"time"
 )
 
+type Node struct {
+	Address string `conf:"default:localhost"`
+	Port    int    `conf:"default:3000"`
+}
 var build = "develop"
 
 func main() {
@@ -50,6 +55,7 @@ func run(log *zerolog.Logger) error {
 			APIHost         string        `conf:"default::8081"`
 			DebugHost       string        `conf:"default::4001"`
 		}
+		Nodes []Node `conf:"default:localhost:3000"`
 	}{
 		Version: conf.Version{
 			Build: build,
@@ -67,6 +73,8 @@ func run(log *zerolog.Logger) error {
 		}
 		return fmt.Errorf("parsing config: %w", err)
 	}
+
+	log.Info().Msg(cfg.Nodes[0].Address + "--------------------------------------")
 
 	// -------------------------------------------------------------------------
 	// App Starting
@@ -102,15 +110,17 @@ func run(log *zerolog.Logger) error {
 	// -------------------------------------------------------------------------
 	// Start API Service
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /path/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "got path\n")
+	log.Info().Msg("initializing V1 API support")
+	shutdown := make(chan os.Signal, 1)
+	apiMux := handlers.APIMux(handlers.APIMuxConfig{
+		Shutdown: shutdown,
+		Log:      log,
 	})
 
 	errorLogger := zerolog.New(os.Stderr).With().Timestamp().Logger()
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
-		Handler:      http.DefaultServeMux,
+		Handler:      apiMux,
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 		IdleTimeout:  cfg.Web.IdleTimeout,
@@ -132,5 +142,5 @@ func run(log *zerolog.Logger) error {
 	select {
 	case err := <-serverErrors:
 		return fmt.Errorf("server error: %w", err)
-	}	
+	}
 }

@@ -98,7 +98,7 @@ func (list *LinkedList[T]) Values() []T {
 	values := make([]T, 0, list.size)
 	current := list.Head
 	for {
-		values = append(values, current.Val)
+		values = append(values, *current.Val)
 		current = current.Next
 		if current == list.Head {
 			break
