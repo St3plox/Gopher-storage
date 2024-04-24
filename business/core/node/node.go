@@ -3,6 +3,7 @@ package node
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/St3plox/Gopher-storage/foundation/storage"
 	"net/http"
 )
@@ -79,12 +80,17 @@ func (n *Node) Get(key string) (any, int, error) {
 // Put function runs  Post request to this node, returns status code and error
 func (n *Node) Put(key string, val any) (int, error) {
 
-	jsonVal, err := json.Marshal(val)
+	post := struct {
+		Key string
+		Value any
+	}{Key: key, Value: val}
+
+	jsonVal, err := json.Marshal(&post)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
-
-	addr := n.Adress + ":" + n.Port + "/storage"
+	addr := fmt.Sprintf("http://%s:%s/storage", n.Adress, n.Port)
+	fmt.Println(addr)
 
 	resp, err := http.Post(addr, "aplication/json", bytes.NewBuffer(jsonVal))
 	if err != nil {

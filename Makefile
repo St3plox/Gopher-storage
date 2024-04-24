@@ -8,7 +8,7 @@ EXPOSE_PORT			:= 3000
 INTERNAL_PORT		:= 3000
 VERSION				:= 0.0.1
 SERVICE_IMAGE		:= $(BASE_IMAGE_NAME)/$(SERVICE_NAME):$(VERSION)
-GATEWAY_IMAGE		:= $(BASE_IMAGE_NAME)/$(SERVICE_NAME):$(VERSION)
+GATEWAY_IMAGE		:= $(BASE_IMAGE_NAME)/$(GATEWAY_NAME):$(VERSION)
 DOCKER_COMPOSE_FILE := zarf/docker/service/docker-compose.yml
 NAME 		:= service_storage-api_1
 
@@ -28,7 +28,7 @@ tidy:
 	go mod vendor
 
 service-run-local:
-	sudo go run app/services/main-storage/main.go
+	sudo go run app/services/node-api/main.go
 
 run-foundation-tests:
 	sudo go test ./foundation/storage -v
@@ -64,10 +64,13 @@ service-stop:
 	docker rm $(CONTAINER_NAME)
 
 gateway-build-image:
-	docker build -t $(SERVICE_IMAGE) -f zarf/docker/gateway/Dockerfile .
+	docker build -t $(GATEWAY_IMAGE) -f zarf/docker/gateway/Dockerfile .
 
 gateway-run:
 	docker run -d -p 8081:8081 --name $(GATEWAY_NAME) $(GATEWAY_IMAGE)
+
+gateway-run-local:
+	 go run app/services/gateway-api/main.go
 
 gateway-stop:
 	docker stop $(GATEWAY_NAME)

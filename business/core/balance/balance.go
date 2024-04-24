@@ -1,10 +1,13 @@
 // Package balancer is used for balancing request in hash space
 package balance
 
-import "github.com/rs/zerolog"
+import (
+	"fmt"
+	"github.com/rs/zerolog"
+)
 
 type Balancer interface {
-	Get(key string)(any, error)
+	Get(key string) (any, error)
 	Put(key string, value any) error
 }
 
@@ -20,3 +23,24 @@ func NewCore(log *zerolog.Logger, balancer Balancer) *Core {
 	}
 }
 
+func (c *Core) Get(key string) (any, error) {
+
+	val, err := c.balancer.Get(key)
+	if err != nil {
+		c.log.Err(err).Msg("Error occured in get core")
+		return nil, fmt.Errorf("get: %w", err)
+	}
+
+	return val, nil
+
+}
+
+func (c *Core) Post(key string, value any) error {
+
+	if err := c.balancer.Put(key, value); err != nil {
+		c.log.Err(err).Msg("Error occured in post core")
+		return fmt.Errorf("put: %w", err)
+	}
+
+	return nil
+}
