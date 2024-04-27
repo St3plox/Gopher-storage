@@ -1,13 +1,13 @@
 GOLANG          	:= golang:1.22
 ALPINE 				:= alpine:3.19
 BASE_IMAGE_NAME 	:= localhost/tveu/storage
-SERVICE_NAME    	:= node-api
+NODE_NAME    		:= node-api
 GATEWAY_NAME    	:= gateway-api
 CONTAINER_NAME  	:= node
 EXPOSE_PORT			:= 3000
 INTERNAL_PORT		:= 3000
 VERSION				:= 0.0.1
-SERVICE_IMAGE		:= $(BASE_IMAGE_NAME)/$(SERVICE_NAME):$(VERSION)
+NODE_IMAGE			:= $(BASE_IMAGE_NAME)/$(NODE_NAME):$(VERSION)
 GATEWAY_IMAGE		:= $(BASE_IMAGE_NAME)/$(GATEWAY_NAME):$(VERSION)
 DOCKER_COMPOSE_FILE := zarf/docker/service/docker-compose.yml
 NAME 		:= service_storage-api_1
@@ -27,7 +27,7 @@ tidy:
 	go mod tidy
 	go mod vendor
 
-service-run-local:
+node-run-local:
 	sudo go run app/services/node-api/main.go
 
 run-foundation-tests:
@@ -38,8 +38,8 @@ run-tests: run-foundation-tests
 dev-test-curl:
 	curl localhost:$(EXPOSE_PORT)/storage/1
 
-service-build-image:
-	docker build -t $(SERVICE_IMAGE) -f zarf/docker/service/Dockerfile .
+node-build-image:
+	docker build -t $(NODE_IMAGE) -f zarf/docker/service/Dockerfile .
 
 docker-compose-up:
 	docker-compose -f $(DOCKER_COMPOSE_FILE) up -d
@@ -47,21 +47,18 @@ docker-compose-up:
 docker-compose-down:
 	docker-compose f $(DOCKER_COMPOSE_FILE) down
 
-service-logs:
-	docker logs service_storage-api_1 -f
-
 docker-compose-logs:
 	docker-compose -f $(DOCKER_COMPOSE_FILE) logs
 
 metrics:
 	expvarmon -ports="localhost:4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
 
-service-run:
-	docker run -d -p $(EXPOSE_PORT):$(INTERNAL_PORT) --name $(CONTAINER_NAME) $(SERVICE_IMAGE)
+node-run:
+	docker run -d -p $(EXPOSE_PORT):$(INTERNAL_PORT) --name $(NODE_NAME) $(NODE_IMAGE)
 
-service-stop:
-	docker stop $(CONTAINER_NAME)
-	docker rm $(CONTAINER_NAME)
+node-stop:
+	docker stop $(NODE_NAME)
+	docker rm $(NODE_NAME)
 
 gateway-build-image:
 	docker build -t $(GATEWAY_IMAGE) -f zarf/docker/gateway/Dockerfile .
