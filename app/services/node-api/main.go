@@ -134,7 +134,7 @@ func run(log *zerolog.Logger) error {
 		ErrorLog:     defaultLog.New(&errorLogger, "", 0),
 	}
 
-	serverErrors := make(chan error, 1)
+  serverErrors := make(chan error, 1)
 	go func() {
 		log.Info().
 			Str("status", "api router started").
@@ -166,7 +166,6 @@ func run(log *zerolog.Logger) error {
 			_ = api.Close()
 			return fmt.Errorf("could not stop server gracefully: %w", err)
 		}
-
 	}
 
 	return nil

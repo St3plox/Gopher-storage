@@ -20,12 +20,6 @@ func New(storer storage.Storer) *Handler {
 	}
 }
 
-// SaveData temporarily here
-type SaveData struct {
-	Key string
-	Val any
-}
-
 func (h *Handler) Get(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 
 	key := r.PathValue("key")
@@ -37,7 +31,7 @@ func (h *Handler) Get(ctx context.Context, w http.ResponseWriter, r *http.Reques
 
 	val, exists, err := h.storer.Get(key)
 	if err != nil {
-		return v1.NewRequestError(errors.New("Sorage error"+err.Error()), http.StatusInternalServerError)
+		return v1.NewRequestError(errors.New("Storage error "+err.Error()), http.StatusInternalServerError)
 	}
 	if !exists {
 		return v1.NewRequestError(errors.New("KEY NOT FOUND"), http.StatusNotFound)
@@ -59,7 +53,7 @@ func (h *Handler) Get(ctx context.Context, w http.ResponseWriter, r *http.Reques
 }
 
 func (h *Handler) Post(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	var sd SaveData
+	var sd storage.SaveData
 	err := json.NewDecoder(r.Body).Decode(&sd)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -67,7 +61,7 @@ func (h *Handler) Post(ctx context.Context, w http.ResponseWriter, r *http.Reque
 	}
 
 
-	err = h.storer.Put(sd.Key, sd.Val)
+	err = h.storer.Put(sd.Key, sd.Value)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return nil

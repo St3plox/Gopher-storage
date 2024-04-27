@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/St3plox/Gopher-storage/app/services/gateway-api/handlers"
+	"github.com/St3plox/Gopher-storage/business/core/balance"
+	"github.com/St3plox/Gopher-storage/business/core/node"
 	"github.com/St3plox/Gopher-storage/business/web/v1/debug"
 	"github.com/St3plox/Gopher-storage/foundation/logger"
 	"github.com/ardanlabs/conf/v3"
@@ -19,9 +21,12 @@ import (
 
 type Node struct {
 	Address string `conf:"default:localhost"`
-	Port    int    `conf:"default:3000"`
+	Port    string `conf:"default:3000"`
 }
+
 var build = "develop"
+
+const nodesCount = 20
 
 func main() {
 	log := logger.New("GATEWAY - SERVICE")
@@ -63,6 +68,9 @@ func run(log *zerolog.Logger) error {
 		},
 	}
 
+	cfg.Nodes = make([]Node, 1, nodesCount)
+	cfg.Nodes[0] = Node{Address: "localhost", Port: "3000"}
+
 	const prefix = "GATEWAY"
 	help, err := conf.Parse(prefix, &cfg)
 
@@ -73,8 +81,6 @@ func run(log *zerolog.Logger) error {
 		}
 		return fmt.Errorf("parsing config: %w", err)
 	}
-
-	log.Info().Msg(cfg.Nodes[0].Address + "--------------------------------------")
 
 	// -------------------------------------------------------------------------
 	// App Starting
@@ -108,6 +114,31 @@ func run(log *zerolog.Logger) error {
 	}()
 
 	// -------------------------------------------------------------------------
+	// Initializing Hash Space
+	hs := balance.NewHashSpace()
+	nodes := make([]node.Node,0,	 nodesCount*3)
+
+	for _, n := range cfg.Nodes {
+
+		nd, err := node.New(n.Address, n.Port)
+		if err != nil {
+			panic(err)
+		}
+
+		virtN1, err := node.GenVirtual(nd)
+		virtN2, err := node.GenVirtual(nd)
+		if err != nil {
+			panic(err)
+		}
+
+		nodes = append(nodes, *nd)
+		nodes = append(nodes, *virtN1)
+		nodes = append(nodes, *virtN2)
+	}
+
+	hs.InitializeNodes(nodes)
+
+	// -------------------------------------------------------------------------
 	// Start API Service
 
 	log.Info().Msg("initializing V1 API support")
@@ -115,6 +146,7 @@ func run(log *zerolog.Logger) error {
 	apiMux := handlers.APIMux(handlers.APIMuxConfig{
 		Shutdown: shutdown,
 		Log:      log,
+		Balancer: hs,
 	})
 
 	errorLogger := zerolog.New(os.Stderr).With().Timestamp().Logger()

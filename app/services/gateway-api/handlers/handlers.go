@@ -21,9 +21,7 @@ func APIMux(cfg APIMuxConfig) *web.App {
 	core := balance.NewCore(cfg.Log, cfg.Balancer)
 	h := gatewaygrp.New(core)
 
-	_ = h
-	/*app.Handle("GET /storage/{key}", h.Get)
+	app.Handle("GET /storage/{key}", h.Get)
 	app.Handle("POST /storage", h.Post)
-*/
 	return app
 }

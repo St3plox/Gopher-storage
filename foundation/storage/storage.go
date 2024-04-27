@@ -25,6 +25,11 @@ type Storage struct {
 	PartitionNumber int
 }
 
+type SaveData struct {
+	Key string
+	Value any
+}
+
 func NewStorage(defaultPath string, partitionNumber int) *Storage {
 	return &Storage{
 		DefaultPath:     defaultPath,
@@ -92,6 +97,7 @@ func (s *Storage) Get(key string) (any, bool, error) {
 	partitionDir := s.partitionDirGenerate(keyHash, partition)
 	doc, _, isExist, err := handleCollision(partitionDir, key)
 	if err != nil {
+		fmt.Println("soser1")
 		return nil, false, err
 	}
 
