@@ -25,6 +25,11 @@ type Storage struct {
 	PartitionNumber int
 }
 
+type SaveData struct {
+	Key string
+	Value any
+}
+
 func NewStorage(defaultPath string, partitionNumber int) *Storage {
 	return &Storage{
 		DefaultPath:     defaultPath,

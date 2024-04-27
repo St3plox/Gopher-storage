@@ -7,7 +7,7 @@ import (
 )
 
 type Balancer interface {
-	Get(key string) (any, error)
+	Get(key string) (any, int, error)
 	Put(key string, value any) error
 }
 
@@ -23,15 +23,15 @@ func NewCore(log *zerolog.Logger, balancer Balancer) *Core {
 	}
 }
 
-func (c *Core) Get(key string) (any, error) {
+func (c *Core) Get(key string) (any, int, error) {
 
-	val, err := c.balancer.Get(key)
+	val, code, err := c.balancer.Get(key)
 	if err != nil {
 		c.log.Err(err).Msg("Error occured in get core")
-		return nil, fmt.Errorf("get: %w", err)
+		return nil, 500, fmt.Errorf("get: %w", err)
 	}
 
-	return val, nil
+	return val, code, nil
 
 }
 

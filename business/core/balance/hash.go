@@ -17,23 +17,23 @@ func NewHashSpace() *HashSpace {
 	}
 }
 
-func (hs *HashSpace) Get(key string) (any, error) {
+func (hs *HashSpace) Get(key string) (any, int, error) {
 	keyHash, _, err := storage.Hash(key, 1)
 	if err != nil {
-		return nil, err
+		return nil, 500, err
 	}
 
 	listNode := hs.nodes.FindClosestNode(keyHash)
 	n := listNode.Val
 
-	val, _, err := (*n).Get(key)
+	val, code, err := (*n).Get(key)
 	if err != nil {
-		return nil, err
+		return nil, 500, err
 	}
 
 	//TODO: Add failure handling
 
-	return val, nil
+	return val, code, nil
 }
 
 func (hs *HashSpace) Put(key string, value any) error {

@@ -61,7 +61,7 @@ func (n *Node) CheckConnection() bool {
 // Get function sends Get request to this node address, returns value, response code, error
 func (n *Node) Get(key string) (any, int, error) {
 
-	addr := n.Adress + ":" + n.Port + "/storage" + key
+	addr := fmt.Sprintf("http://%s:%s/storage/%s", n.Adress, n.Port, key)
 
 	resp, err := http.Get(addr)
 	if err != nil {
@@ -69,7 +69,7 @@ func (n *Node) Get(key string) (any, int, error) {
 	}
 	defer resp.Body.Close()
 
-	var respBody any
+	var respBody storage.SaveData
 	if err = json.NewDecoder(resp.Body).Decode(&respBody); err != nil {
 		return nil, http.StatusInternalServerError, err
 	}

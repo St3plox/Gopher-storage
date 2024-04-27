@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/St3plox/Gopher-storage/business/core/balance"
 	v1 "github.com/St3plox/Gopher-storage/business/web/v1"
+	"github.com/St3plox/Gopher-storage/foundation/storage"
 	"github.com/St3plox/Gopher-storage/foundation/web"
 	"net/http"
 )
@@ -18,11 +19,6 @@ func New(core *balance.Core) *Handler {
 	return &Handler{core: core}
 }
 
-type SaveData struct {
-	Key   string `json:"key"`
-	Value any    `json:"value"`
-}
-
 func (h *Handler) Get(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 
 	key := r.PathValue("key")
@@ -32,27 +28,18 @@ func (h *Handler) Get(ctx context.Context, w http.ResponseWriter, r *http.Reques
 		return nil
 	}
 
-	val, err := h.core.Get(key)
+	val, code, err := h.core.Get(key)
 
 	if err != nil {
-		return v1.NewRequestError(errors.New("Core error"+err.Error()), http.StatusInternalServerError)
+		return v1.NewRequestError(errors.New("Core error "+err.Error()), http.StatusInternalServerError)
 	}
 
 	//Refactor for status code
-	/*
-		if !exists {
-			return v1.NewRequestError(errors.New("KEY NOT FOUND"), http.StatusNotFound)
-		}
-	*/
-	response := struct {
-		Key   string      `json:"key"`
-		Value interface{} `json:"value"`
-	}{
-		Key:   key,
-		Value: val,
+	if code == 404 {
+		return v1.NewRequestError(errors.New("KEY NOT FOUND"), http.StatusNotFound)
 	}
 
-	err = web.Respond(ctx, w, response, http.StatusOK)
+	err = web.Respond(ctx, w, val, http.StatusOK)
 	if err != nil {
 		return err
 	}
@@ -61,7 +48,7 @@ func (h *Handler) Get(ctx context.Context, w http.ResponseWriter, r *http.Reques
 }
 
 func (h *Handler) Post(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	var sd SaveData
+	var sd storage.SaveData
 	err := json.NewDecoder(r.Body).Decode(&sd)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
