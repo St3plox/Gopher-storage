@@ -54,8 +54,17 @@ func (n *Node) HashID() int {
 
 // CheckConnection function used to check if the node is avaiable
 func (n *Node) CheckConnection() bool {
-	//TODO: implement me
-	return false
+
+	addr := fmt.Sprintf("http://%s:%s/liveness", n.Adress, n.Port)
+
+	resp, err := http.Get(addr)
+	if err != nil  || resp.StatusCode != http.StatusOK{
+		return false
+	}
+	defer resp.Body.Close()
+
+	n.IsAvailable = true
+	return true
 }
 
 // Get function sends Get request to this node address, returns value, response code, error
@@ -81,7 +90,7 @@ func (n *Node) Get(key string) (any, int, error) {
 func (n *Node) Put(key string, val any) (int, error) {
 
 	post := struct {
-		Key string
+		Key   string
 		Value any
 	}{Key: key, Value: val}
 

@@ -60,7 +60,6 @@ func (h *Handler) Post(ctx context.Context, w http.ResponseWriter, r *http.Reque
 		return nil
 	}
 
-
 	err = h.storer.Put(sd.Key, sd.Value)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -73,4 +72,13 @@ func (h *Handler) Post(ctx context.Context, w http.ResponseWriter, r *http.Reque
 	}
 
 	return nil
+}
+
+func (h *Handler) Liveness(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+
+	err := web.Respond(ctx, w, nil, http.StatusOK)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	return err
 }

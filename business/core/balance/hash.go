@@ -54,6 +54,10 @@ func (hs *HashSpace) Put(key string, value any) error {
 		go func(node *node.Node) {
 			defer wg.Done()
 
+			if n.CheckConnection() != true {
+				//TODO: add failure handling
+			}
+
 			if _, err := node.Put(key, value); err != nil {
 				m.Lock()
 				putErr = err
@@ -74,6 +78,7 @@ func (hs *HashSpace) Put(key string, value any) error {
 func (hs *HashSpace) InitializeNodes(nodes []node.Node) {
 	for _, n := range nodes {
 		hs.nodes.Insert(n.HashID(), &n)
+		n.CheckConnection()
 	}
 }
 

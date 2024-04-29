@@ -21,6 +21,7 @@ func APIMux(cfg APIMuxConfig) *web.App {
 	h := maingrp.New(cfg.Storer)
 
 	app.Handle("GET /storage/{key}", h.Get)
+	app.Handle("GET /liveness", h.Liveness)
 	app.Handle("POST /storage", h.Post)
 
 	return app
