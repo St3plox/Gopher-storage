@@ -73,3 +73,18 @@ gateway-stop:
 	docker stop $(GATEWAY_NAME)
 	docker rm $(GATEWAY_NAME)
 
+service-build-image:
+	make gateway-build-image
+	make node-build-image
+
+service-run:
+	make gateway-run
+	make node-run
+
+service-stop:
+	make gateway-stop
+	make node-stop
+
+service-launch:
+	make service-build-image
+	make service-run
