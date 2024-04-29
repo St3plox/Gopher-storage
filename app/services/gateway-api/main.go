@@ -60,7 +60,7 @@ func run(log *zerolog.Logger) error {
 			APIHost         string        `conf:"default::8081"`
 			DebugHost       string        `conf:"default::4001"`
 		}
-		Nodes []Node `conf:"default:localhost:3000"`
+		Nodes []Node `conf:"default:0.0.0.0:3000"`
 	}{
 		Version: conf.Version{
 			Build: build,
@@ -69,7 +69,7 @@ func run(log *zerolog.Logger) error {
 	}
 
 	cfg.Nodes = make([]Node, 1, nodesCount)
-	cfg.Nodes[0] = Node{Address: "localhost", Port: "3000"}
+	cfg.Nodes[0] = Node{Address: "0.0.0.0", Port: "3000"}
 
 	const prefix = "GATEWAY"
 	help, err := conf.Parse(prefix, &cfg)

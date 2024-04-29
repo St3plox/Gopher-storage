@@ -64,7 +64,7 @@ gateway-build-image:
 	docker build -t $(GATEWAY_IMAGE) -f zarf/docker/gateway/Dockerfile .
 
 gateway-run:
-	docker run -d -p 8081:8081 --name $(GATEWAY_NAME) $(GATEWAY_IMAGE)
+	docker run -d --net host --name $(GATEWAY_NAME) $(GATEWAY_IMAGE)
 
 gateway-run-local:
 	 go run app/services/gateway-api/main.go
