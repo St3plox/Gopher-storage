@@ -31,9 +31,13 @@ node-run-local:
 	sudo go run app/services/node-api/main.go
 
 run-foundation-tests:
-	sudo go test ./foundation/storage -v
+	sudo go test ./foundation/storage
+
+run-business-tests:
+	 go test ./business/core/node/
 
 run-tests: run-foundation-tests
+	make run-business-tests
 
 dev-test-curl:
 	curl localhost:$(EXPOSE_PORT)/storage/1
