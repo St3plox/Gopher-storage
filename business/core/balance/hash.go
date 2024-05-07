@@ -8,12 +8,12 @@ import (
 )
 
 type HashSpace struct {
-	nodes *linkedlist.LinkedList[*node.Node]
+	nodes *linkedlist.LinkedList[RemoteStorer]
 }
 
 func NewHashSpace() *HashSpace {
 	return &HashSpace{
-		nodes: linkedlist.New[*node.Node](),
+		nodes: linkedlist.New[RemoteStorer](),
 	}
 }
 
@@ -26,12 +26,15 @@ func (hs *HashSpace) Get(key string) (any, int, error) {
 	listNode := hs.nodes.FindClosestNode(keyHash)
 	n := listNode.Val
 
-	val, code, err := (*n).Get(key)
+	val, exist, err := (*n).Get(key)
 	if err != nil {
 		return nil, 500, err
 	}
 
-	//TODO: Add failure handling
+	code := 500
+	if !exist {
+		code = 404
+	}
 
 	return val, code, nil
 }
@@ -43,7 +46,7 @@ func (hs *HashSpace) Put(key string, value any) error {
 	}
 
 	listNode := hs.nodes.FindClosestNode(keyHash)
-	nodes := []*node.Node{*listNode.Val, *listNode.Next.Val, *listNode.Next.Next.Val}
+	nodes := []RemoteStorer{*listNode.Val, *listNode.Next.Val, *listNode.Next.Next.Val}
 
 	var wg sync.WaitGroup
 	wg.Add(len(nodes))
@@ -58,7 +61,7 @@ func (hs *HashSpace) Put(key string, value any) error {
 				//TODO: add failure handling
 			}
 
-			if _, err := node.Put(key, value); err != nil {
+			if err := node.Put(key, value); err != nil {
 				m.Lock()
 				putErr = err
 				m.Unlock()

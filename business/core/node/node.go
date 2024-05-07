@@ -58,7 +58,7 @@ func (n *Node) CheckConnection() bool {
 	addr := fmt.Sprintf("http://%s:%s/liveness", n.Adress, n.Port)
 
 	resp, err := http.Get(addr)
-	if err != nil  || resp.StatusCode != http.StatusOK{
+	if err != nil || resp.StatusCode != http.StatusOK {
 		return false
 	}
 	defer resp.Body.Close()
@@ -68,26 +68,31 @@ func (n *Node) CheckConnection() bool {
 }
 
 // Get function sends Get request to this node address, returns value, response code, error
-func (n *Node) Get(key string) (any, int, error) {
+func (n *Node) Get(key string) (any, bool, error) {
 
 	addr := fmt.Sprintf("http://%s:%s/storage/%s", n.Adress, n.Port, key)
 
 	resp, err := http.Get(addr)
 	if err != nil {
-		return nil, resp.StatusCode, err
+		return nil, false, err
 	}
 	defer resp.Body.Close()
 
 	var respBody storage.SaveData
 	if err = json.NewDecoder(resp.Body).Decode(&respBody); err != nil {
-		return nil, http.StatusInternalServerError, err
+		return nil, false, err
 	}
 
-	return respBody, resp.StatusCode, nil
+	exist := false
+	if resp.StatusCode != http.StatusNotFound {
+		exist = true
+	}
+
+	return respBody, exist, nil
 }
 
 // Put function runs  Post request to this node, returns status code and error
-func (n *Node) Put(key string, val any) (int, error) {
+func (n *Node) Put(key string, val any) error {
 
 	post := struct {
 		Key   string
@@ -96,16 +101,16 @@ func (n *Node) Put(key string, val any) (int, error) {
 
 	jsonVal, err := json.Marshal(&post)
 	if err != nil {
-		return http.StatusInternalServerError, err
+		return err
 	}
 	addr := fmt.Sprintf("http://%s:%s/storage", n.Adress, n.Port)
 	fmt.Println(addr)
 
 	resp, err := http.Post(addr, "aplication/json", bytes.NewBuffer(jsonVal))
 	if err != nil {
-		return http.StatusInternalServerError, err
+		return err
 	}
 	defer resp.Body.Close()
 
-	return resp.StatusCode, nil
+	return nil
 }
