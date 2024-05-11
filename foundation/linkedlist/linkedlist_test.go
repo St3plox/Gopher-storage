@@ -39,13 +39,13 @@ func TestLinkedList_FindClosestNode(t *testing.T) {
 	}{
 		{"Test 1 get precise mid", list, args{50}, 50},
 		{"Test 2 get closest mid", list, args{25}, 50},
-		{"Test 3 get first precise", list, args{1},1},
+		{"Test 3 get first precise", list, args{1}, 1},
 		{"Test 4 get second precise", list, args{3}, 3},
 		{"Test 5 get last precise", list, args{101}, 101},
 		{"Test 6 get closest high", list, args{100}, 101},
 		{"Test 7 get closest low", list, args{2}, 3},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.list.FindClosestNode(tt.args.hashedId)
@@ -70,4 +70,3 @@ func TestLinkedList_RemovedNode(t *testing.T) {
 		t.Errorf("Deletion of Node with id %d failed", list.Head.Next.hashedID)
 	}
 }
-

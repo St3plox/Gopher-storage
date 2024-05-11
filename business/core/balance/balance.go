@@ -3,12 +3,20 @@ package balance
 
 import (
 	"fmt"
+	"github.com/St3plox/Gopher-storage/foundation/storage"
 	"github.com/rs/zerolog"
 )
 
 type Balancer interface {
 	Get(key string) (any, int, error)
 	Put(key string, value any) error
+}
+
+type RemoteStorer interface {
+	storage.Storer
+
+	CheckConnection() bool
+	HashID() int
 }
 
 type Core struct {

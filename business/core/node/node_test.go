@@ -51,13 +51,13 @@ func TestNode_Get(t *testing.T) {
 	}
 
 	// Testing Get function
-	data, statusCode, err := node.Get("test_key")
+	data, exist, err := node.Get("test_key")
 
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
-	if statusCode != http.StatusOK {
-		t.Errorf("Expected status code %d, got %d", http.StatusOK, statusCode)
+	if exist != true {
+		t.Errorf("Expected exists to be %t, got %t", true, exist)
 	}
 	if data == nil {
 		t.Errorf("Expected non-nil response data, got nil")
@@ -83,13 +83,10 @@ func TestNode_Put(t *testing.T) {
 	}
 
 	// Testing Put function
-	statusCode, err := node.Put("test_key", "test_value")
+	err = node.Put("test_key", "test_value")
 
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
-	}
-	if statusCode != http.StatusCreated {
-		t.Errorf("Expected status code %d, got %d", http.StatusCreated, statusCode)
 	}
 }
 
@@ -112,10 +109,9 @@ func TestNode_GenVirtual(t *testing.T) {
 	if vNode.Adress != vNode.Adress && node.Port != node.Port {
 		t.Errorf("Expected virtual node's addres and port to be equal, got virtual: %s:%s node: %s:%s", vNode.Adress, vNode.Port, node.Adress, node.Port)
 	}
-	
+
 	if vNode.hashId == node.hashId {
 		t.Errorf("Expected virtual node hash id to be different from node")
 	}
-
 
 }
