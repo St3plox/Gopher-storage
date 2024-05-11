@@ -1,7 +1,6 @@
 package balance
 
 import (
-	"github.com/St3plox/Gopher-storage/business/core/node"
 	"github.com/St3plox/Gopher-storage/foundation/linkedlist"
 	"github.com/St3plox/Gopher-storage/foundation/storage"
 	"sync"
@@ -31,7 +30,7 @@ func (hs *HashSpace) Get(key string) (any, int, error) {
 		return nil, 500, err
 	}
 
-	code := 500
+	code := 200
 	if !exist {
 		code = 404
 	}
@@ -54,7 +53,7 @@ func (hs *HashSpace) Put(key string, value any) error {
 	var putErr error
 
 	for _, n := range nodes {
-		go func(node *node.Node) {
+		go func(node RemoteStorer) {
 			defer wg.Done()
 
 			if n.CheckConnection() != true {
@@ -78,9 +77,9 @@ func (hs *HashSpace) Put(key string, value any) error {
 }
 
 // InitializeNodes inserts nods in node array before establishing connection1
-func (hs *HashSpace) InitializeNodes(nodes []node.Node) {
+func (hs *HashSpace) InitializeNodes(nodes []RemoteStorer) {
 	for _, n := range nodes {
-		hs.nodes.Insert(n.HashID(), &n)
+		hs.nodes.Insert(n.HashID(), n)
 		n.CheckConnection()
 	}
 }
