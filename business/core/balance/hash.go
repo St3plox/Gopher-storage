@@ -23,10 +23,36 @@ func (hs *HashSpace) Get(key string) (any, int, error) {
 	}
 
 	listNode := hs.nodes.FindClosestNode(keyHash)
-	n := listNode.Val
+	nodes := []RemoteStorer{*listNode.Val, *listNode.Next.Val, *listNode.Next.Next.Val}
 
-	val, exist, err := (*n).Get(key)
-	if err != nil {
+	var wg sync.WaitGroup
+	var getError error
+	wg.Add(len(nodes))
+
+
+	var val any
+	var exist bool
+
+	for _, n := range nodes {
+		func(node RemoteStorer) {
+			defer wg.Done()
+
+			if node.CheckConnection() != true {
+				//TODO: add failure handling
+			}
+
+			if val, exist, err = node.Get(key); err != nil {
+				getError = err
+			}
+
+		}(n)
+		
+		if getError == nil{
+			break
+		}
+	}
+
+	if getError != nil {
 		return nil, 500, err
 	}
 
@@ -57,7 +83,7 @@ func (hs *HashSpace) Put(key string, value any) error {
 			defer wg.Done()
 
 			if n.CheckConnection() != true {
-				//TODO: add failure handling
+				return
 			}
 
 			if err := node.Put(key, value); err != nil {
@@ -98,5 +124,6 @@ func (hs *HashSpace) EstablishConnection() error {
 		}
 	}
 
+	//TODO: finish implementation
 	return nil
 }
