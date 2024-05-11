@@ -7,35 +7,35 @@ import (
 
 type mockNode struct {
 	*node.Node
-	GetFunc func(key string) (interface{}, int, error)
-	PutFunc func(key string, value interface{}) (int, error)
+	GetFunc func(key string) (interface{}, bool, error)
+	PutFunc func(key string, value interface{}) error
 }
 
-func (m *mockNode) Get(key string) (interface{}, int, error) {
+func (m *mockNode) Get(key string) (interface{}, bool, error) {
 	if m.GetFunc != nil {
 		return m.GetFunc(key)
 	}
-	return nil, 0, nil // Default behavior if GetFunc is not set
+	return nil, false, nil // Default behavior if GetFunc is not set
 }
 
-func (m *mockNode) Put(key string, value interface{}) (int, error) {
+func (m *mockNode) Put(key string, value interface{}) error {
 	if m.PutFunc != nil {
 		return m.PutFunc(key, value)
 	}
-	return 0, nil // Default behavior if PutFunc is not set
+	return nil // Default behavior if PutFunc is not set
 }
 
 func TestHashSpace_Get(t *testing.T) {
 	// Mocking the node and its behavior
 	mock := &mockNode{
-		Node: &node.Node{}, // Embedding the node.Node type
-		GetFunc: func(key string) (interface{}, int, error) {
-			return "test_value", 200, nil
+		Node: &node.Node{},
+		GetFunc: func(key string) (interface{}, bool, error) {
+			return "test_value", true, nil
 		},
 	}
 
 	hs := NewHashSpace()
-	hs.InitializeNodes([]mockNode{mock}) // Casting mock to node.Node
+	hs.InitializeNodes([]RemoteStorer{mock}) // Casting mock to node.Node
 
 	value, statusCode, err := hs.Get("test_key")
 
@@ -54,13 +54,13 @@ func TestHashSpace_Put(t *testing.T) {
 	// Mocking the node and its behavior
 	mock := &mockNode{
 		Node: &node.Node{}, // Embedding the node.Node type
-		PutFunc: func(key string, value interface{}) (int, error) {
-			return 201, nil
+		PutFunc: func(key string, value interface{}) error {
+			return nil
 		},
 	}
 
 	hs := NewHashSpace()
-	hs.InitializeNodes([]node.Node{mock}) // Casting mock to node.Node
+	hs.InitializeNodes([]RemoteStorer{mock}) // Casting mock to node.Node
 
 	err := hs.Put("test_key", "test_value")
 

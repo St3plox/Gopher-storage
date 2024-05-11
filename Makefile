@@ -35,6 +35,7 @@ run-foundation-tests:
 
 run-business-tests:
 	 go test ./business/core/node/
+	 go test ./business/core/balance/
 
 run-tests: run-foundation-tests
 	make run-business-tests
