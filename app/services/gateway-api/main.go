@@ -116,7 +116,7 @@ func run(log *zerolog.Logger) error {
 	// -------------------------------------------------------------------------
 	// Initializing Hash Space
 	hs := balance.NewHashSpace()
-	nodes := make([]node.Node,0,	 nodesCount*3)
+	nodes := make([]balance.RemoteStorer, 0, nodesCount*3)
 
 	for _, n := range cfg.Nodes {
 
@@ -131,9 +131,9 @@ func run(log *zerolog.Logger) error {
 			panic(err)
 		}
 
-		nodes = append(nodes, *nd)
-		nodes = append(nodes, *virtN1)
-		nodes = append(nodes, *virtN2)
+		nodes = append(nodes, nd)
+		nodes = append(nodes, virtN1)
+		nodes = append(nodes, virtN2)
 	}
 
 	hs.InitializeNodes(nodes)
